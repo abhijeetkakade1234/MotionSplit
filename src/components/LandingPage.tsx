@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { AnimatedActionButton } from './AnimatedActionButton'
 import Grainient from './Grainient'
 import { formatBytes, formatDuration } from '../utils/format'
 import {
@@ -129,21 +130,16 @@ export function LandingPage({ onEnterTool }: LandingPageProps) {
             </p>
 
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-              <button
-                className="inline-flex min-h-13 items-center justify-center rounded-full bg-white px-8 text-sm font-semibold text-[#08101f] transition hover:bg-slate-100"
+              <AnimatedActionButton
+                label="Enter Tool"
                 onClick={onEnterTool}
-                type="button"
-              >
-                Enter Tool
-              </button>
-              <a
-                className="inline-flex min-h-13 items-center justify-center rounded-full px-4 text-sm font-medium text-white transition hover:text-slate-200"
+                variant="upload"
+              />
+              <AnimatedActionButton
                 href="https://github.com/abhijeetkakade1234/MotionSplit"
-                rel="noreferrer"
-                target="_blank"
-              >
-                View on GitHub
-              </a>
+                label="Star on GitHub"
+                variant="github"
+              />
             </div>
 
             <div className="mt-18 text-sm font-medium text-slate-300" data-hero-proof>
@@ -256,14 +252,11 @@ export function LandingPage({ onEnterTool }: LandingPageProps) {
             <TrustLine detail="Built in the open. Contributions welcome." text="Open source" />
             <TrustLine detail="No paywalls. No premium tiers. Just free." text="Always free" />
             <div className="border-b border-white/10 px-6 py-6">
-              <a
-                className="inline-flex min-h-12 items-center justify-center rounded-[18px] border border-white/10 px-5 text-sm font-medium text-white transition hover:bg-white/[0.04]"
+              <AnimatedActionButton
                 href="https://github.com/abhijeetkakade1234/MotionSplit"
-                rel="noreferrer"
-                target="_blank"
-              >
-                View on GitHub
-              </a>
+                label="Star on GitHub"
+                variant="github"
+              />
             </div>
           </div>
         </div>
@@ -277,13 +270,13 @@ export function LandingPage({ onEnterTool }: LandingPageProps) {
           <h2 className="mt-5 text-4xl font-semibold tracking-[-0.05em] text-white sm:text-5xl">
             Start splitting in seconds.
           </h2>
-          <button
-            className="mt-8 inline-flex min-h-13 items-center justify-center rounded-full bg-white px-8 text-sm font-semibold text-[#08101f] transition hover:bg-slate-100"
-            onClick={onEnterTool}
-            type="button"
-          >
-            Enter Tool
-          </button>
+          <div className="mt-8 flex justify-center">
+            <AnimatedActionButton
+              label="Enter Tool"
+              onClick={onEnterTool}
+              variant="upload"
+            />
+          </div>
         </div>
 
         <footer className="mt-10 flex flex-col gap-7 border-t border-white/8 pt-8 text-sm text-slate-400 md:flex-row md:items-center md:justify-between">

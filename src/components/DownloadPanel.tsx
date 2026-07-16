@@ -1,5 +1,6 @@
 import type { ArchiveInfo } from '../types'
 import { formatBytes } from '../utils/format'
+import { AnimatedActionButton } from './AnimatedActionButton'
 
 type DownloadPanelProps = {
   archiveInfo: ArchiveInfo | null
@@ -38,13 +39,14 @@ export function DownloadPanel({
             <MetricCard label="Format" value={archiveInfo.format.toUpperCase()} />
           </div>
 
-          <a
-            className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-white px-5 text-sm font-medium text-zinc-950 transition hover:bg-zinc-200"
-            download={archiveInfo.fileName}
-            href={archiveInfo.downloadUrl}
-          >
-            Download ZIP
-          </a>
+          <div>
+            <AnimatedActionButton
+              download={archiveInfo.fileName}
+              href={archiveInfo.downloadUrl}
+              label="Download ZIP"
+              variant="download"
+            />
+          </div>
         </div>
       ) : (
         <div className="mt-4 rounded-2xl border border-dashed border-white/10 bg-white/3 px-4 py-6 text-sm text-zinc-500">
