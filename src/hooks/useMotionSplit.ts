@@ -1,6 +1,5 @@
 import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
-import JSZip from 'jszip'
 import { dropFFmpeg, getFFmpeg } from '../ffmpeg/client'
 import type {
   ArchiveInfo,
@@ -14,6 +13,7 @@ import { buildFrameName } from '../utils/naming'
 import { loadSettings, saveSettings } from '../utils/storage'
 import { parseFrameRate } from '../utils/video'
 import { readVideoMetadata } from '../utils/video'
+import { createFrameArchive, finalizeFrameArchive } from '../zip/frameArchive'
 import {
   MAX_UPLOAD_BYTES,
   MAX_VIDEO_DURATION_SECONDS,
@@ -144,7 +144,7 @@ export function useMotionSplit() {
         ? await resolveSourceFrameRate(ffmpeg, metadata, setMetadata)
         : metadata.frameRate
 
-    const zip = new JSZip()
+    const zip = createFrameArchive()
     const fps =
       settings.mode === 'every-frame' ? sourceFrameRate ?? 30 : settings.fps
     const totalFrames = Math.max(
@@ -269,7 +269,7 @@ export function useMotionSplit() {
       }
 
       setStatusText('Creating ZIP archive...')
-      const zipBlob = await zip.generateAsync({ type: 'blob' })
+      const zipBlob = await finalizeFrameArchive(zip)
       const downloadUrl = URL.createObjectURL(zipBlob)
       archiveUrlRef.current = downloadUrl
 

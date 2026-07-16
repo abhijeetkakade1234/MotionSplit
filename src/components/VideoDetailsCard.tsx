@@ -35,10 +35,7 @@ export function VideoDetailsCard({
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Metric label="Filename" value={metadata.name} />
           <Metric label="Duration" value={formatDuration(metadata.duration)} />
-          <Metric
-            label="Resolution"
-            value={`${metadata.width} × ${metadata.height}`}
-          />
+          <Metric label="Resolution" value={`${metadata.width} x ${metadata.height}`} />
           <Metric label="FPS" value={formatFrameRate(metadata.frameRate)} />
         </div>
       ) : (
