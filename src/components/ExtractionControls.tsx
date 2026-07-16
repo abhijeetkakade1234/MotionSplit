@@ -64,7 +64,7 @@ export function ExtractionControls({
           />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           <label className="grid gap-2 text-sm text-slate-300">
             Target FPS
             <select
@@ -105,7 +105,7 @@ export function ExtractionControls({
           </label>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           <label className="grid gap-2 text-sm text-slate-300">
             Start Time (s)
             <input
@@ -149,14 +149,14 @@ export function ExtractionControls({
           </label>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           <fieldset className="grid gap-2 text-sm text-slate-300">
             <legend className="pb-1">Padding Digits</legend>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {paddingOptions.map((digits) => (
                 <button
                   key={digits}
-                  className={`min-h-11 flex-1 rounded-2xl border px-4 text-sm transition ${
+                  className={`min-h-11 min-w-0 rounded-2xl border px-2 text-sm transition ${
                     settings.padding === digits
                       ? 'border-[#5a87ff] bg-[#15274d] text-white'
                       : 'border-white/10 bg-[#0a101d] text-slate-300 hover:border-white/20'

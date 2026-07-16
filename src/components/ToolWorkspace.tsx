@@ -18,6 +18,7 @@ type ToolWorkspaceProps = {
 
 export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
   const motionSplit = useMotionSplit()
+  const extracting = motionSplit.phase === 'extracting'
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -39,6 +40,28 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [motionSplit])
+
+  useEffect(() => {
+    if (!extracting) {
+      return
+    }
+
+    function onBeforeUnload(event: BeforeUnloadEvent) {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [extracting])
+
+  function handleBack() {
+    if (extracting && !window.confirm('Extraction is still running. Leave the tool?')) {
+      return
+    }
+
+    onBack()
+  }
 
   return (
     <div className="min-h-screen bg-[#050816] text-slate-50">
@@ -65,10 +88,10 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
             </div>
             <button
               className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-slate-200 transition hover:bg-white/[0.08]"
-              onClick={onBack}
+              onClick={handleBack}
               type="button"
             >
-              Back to landing
+              Back
             </button>
           </div>
         </header>
