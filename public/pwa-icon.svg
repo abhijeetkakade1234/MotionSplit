@@ -1,6 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="128" fill="#09090b"/>
-  <rect x="88" y="120" width="336" height="272" rx="56" fill="#18181b" stroke="#27272a" stroke-width="12"/>
-  <path d="M164 192h74c41 0 74 33 74 74v54h-54v-54c0-11-9-20-20-20h-74v74h-54V192Z" fill="#fafafa"/>
-  <path d="M326 192h22c33 0 60 27 60 60v8c0 33-27 60-60 60h-22v-44h18c9 0 16-7 16-16v-8c0-9-7-16-16-16h-18v-44Z" fill="#a1a1aa"/>
+  <defs>
+    <linearGradient id="starGlow" x1="256" x2="256" y1="104" y2="408" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#d8e5ff"/>
+    </linearGradient>
+    <filter id="softGrain" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence baseFrequency="0.95" numOctaves="2" seed="7" stitchTiles="stitch" type="fractalNoise"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA slope="0.08" type="linear"/>
+      </feComponentTransfer>
+      <feBlend in2="SourceGraphic" mode="soft-light"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="#050816"/>
+  <rect width="512" height="512" rx="128" fill="url(#starGlow)" opacity="0.06"/>
+  <g filter="url(#softGrain)">
+    <path d="M256 118L286 226L394 256L286 286L256 394L226 286L118 256L226 226L256 118Z" fill="url(#starGlow)"/>
+    <circle cx="256" cy="256" fill="#ffffff" r="20"/>
+  </g>
 </svg>

@@ -11,11 +11,27 @@ export function SparkLogo({ className = '' }: SparkLogoProps) {
       viewBox="0 0 64 64"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path
-        d="M32 20L34.4 29.6L44 32L34.4 34.4L32 44L29.6 34.4L20 32L29.6 29.6L32 20Z"
-        fill="white"
-      />
-      <circle cx="32" cy="32" fill="white" r="2.4" />
+      <defs>
+        <linearGradient id="spark-fill" x1="32" x2="32" y1="12" y2="52" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#ffffff" />
+          <stop offset="1" stopColor="#d8e5ff" />
+        </linearGradient>
+        <filter id="spark-grain" x="-20%" y="-20%" width="140%" height="140%">
+          <feTurbulence baseFrequency="1.1" numOctaves="2" seed="7" stitchTiles="stitch" type="fractalNoise" />
+          <feColorMatrix type="saturate" values="0" />
+          <feComponentTransfer>
+            <feFuncA slope="0.08" type="linear" />
+          </feComponentTransfer>
+          <feBlend in2="SourceGraphic" mode="soft-light" />
+        </filter>
+      </defs>
+      <g filter="url(#spark-grain)">
+        <path
+          d="M32 14L35.4 28.6L50 32L35.4 35.4L32 50L28.6 35.4L14 32L28.6 28.6L32 14Z"
+          fill="url(#spark-fill)"
+        />
+        <circle cx="32" cy="32" fill="#ffffff" r="2.8" />
+      </g>
     </svg>
   )
 }
