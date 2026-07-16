@@ -27,14 +27,8 @@ export function ExtractionControls({
   videoDuration,
 }: ExtractionControlsProps) {
   return (
-    <section className="rounded-[28px] border border-white/8 bg-black/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:p-4">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-semibold text-white">Extraction settings</h2>
-          <p className="mt-1 text-sm text-slate-400">
-            Cmd/Ctrl+Enter extracts. Escape cancels mid-run.
-          </p>
-        </div>
+    <section className="rounded-[28px] border border-white/8 bg-black/10 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:p-4">
+      <div className="flex justify-end">
         <button
           className="rounded-2xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:border-white/20 hover:bg-white/5"
           onClick={onReset}
@@ -44,11 +38,11 @@ export function ExtractionControls({
         </button>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:gap-3">
-        <div className="grid gap-3 lg:grid-cols-2">
+      <div className="mt-3 grid gap-3">
+        <div className="grid gap-2 lg:grid-cols-2">
           <ModeCard
             active={settings.mode === 'every-frame'}
-            description="Use the source cadence for maximum fidelity."
+            description="Source cadence."
             onClick={() =>
               setSettings((current) => ({ ...current, mode: 'every-frame' }))
             }
@@ -56,7 +50,7 @@ export function ExtractionControls({
           />
           <ModeCard
             active={settings.mode === 'custom-fps'}
-            description="Keep output lighter for scroll and sequence work."
+            description="Lighter output."
             onClick={() =>
               setSettings((current) => ({ ...current, mode: 'custom-fps' }))
             }
@@ -64,7 +58,7 @@ export function ExtractionControls({
           />
         </div>
 
-        <div className="grid gap-3 lg:grid-cols-2">
+        <div className="grid gap-2 lg:grid-cols-2">
           <label className="grid gap-2 text-sm text-slate-300">
             Target FPS
             <select
@@ -105,7 +99,7 @@ export function ExtractionControls({
           </label>
         </div>
 
-        <div className="grid gap-3 lg:grid-cols-2">
+        <div className="grid gap-2 lg:grid-cols-2">
           <label className="grid gap-2 text-sm text-slate-300">
             Start Time (s)
             <input
@@ -149,7 +143,7 @@ export function ExtractionControls({
           </label>
         </div>
 
-        <div className="grid gap-3 lg:grid-cols-2">
+        <div className="grid gap-2 lg:grid-cols-2">
           <fieldset className="grid gap-2 text-sm text-slate-300">
             <legend className="pb-1">Padding Digits</legend>
             <div className="grid grid-cols-3 gap-2">
@@ -194,14 +188,10 @@ export function ExtractionControls({
                 value={settings.quality}
               />
             </div>
-          ) : (
-            <div className="rounded-2xl border border-white/10 bg-[#0a101d] px-4 py-3 text-sm text-slate-500 lg:self-end">
-              JPG quality appears only when output format is set to JPG.
-            </div>
-          )}
+          ) : null}
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-[#0a101d] p-4 lg:p-3">
+        <div className="rounded-2xl border border-white/10 bg-[#0a101d] p-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="text-xs uppercase tracking-[0.2em] text-slate-500">
@@ -222,13 +212,11 @@ export function ExtractionControls({
         </div>
 
         <button
-          className="min-h-12 rounded-2xl bg-[linear-gradient(90deg,#6ca2ff_0%,#2e67ee_100%)] px-5 text-sm font-medium text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
+          className="hidden"
           disabled={!canExtract || disabled}
           onClick={onStart}
           type="button"
-        >
-          Extract Frames
-        </button>
+        />
       </div>
     </section>
   )
@@ -244,7 +232,7 @@ type ModeCardProps = {
 function ModeCard({ active, description, onClick, title }: ModeCardProps) {
   return (
     <button
-      className={`rounded-2xl border p-4 text-left transition lg:min-h-[116px] lg:p-3 ${
+      className={`rounded-2xl border p-3 text-left transition lg:min-h-[92px] ${
         active
           ? 'border-[#5a87ff] bg-[#12203f]'
           : 'border-white/10 bg-[#0a101d] hover:border-white/20 hover:bg-white/6'
@@ -253,7 +241,7 @@ function ModeCard({ active, description, onClick, title }: ModeCardProps) {
       type="button"
     >
       <div className="text-sm font-medium text-white">{title}</div>
-      <div className="mt-2 text-sm leading-6 text-slate-400 lg:leading-5">{description}</div>
+      <div className="mt-1.5 text-sm leading-5 text-slate-400">{description}</div>
     </button>
   )
 }

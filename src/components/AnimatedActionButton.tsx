@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Check, Download, Star, Upload } from 'lucide-react'
+import { Check, Download, LoaderCircle, Star, Upload } from 'lucide-react'
 
 type AnimatedActionButtonProps = {
   download?: string
@@ -20,6 +20,19 @@ export function AnimatedActionButton({
   variant,
 }: AnimatedActionButtonProps) {
   const [isHovered, setIsHovered] = useState(false)
+  const [downloadState, setDownloadState] = useState<'idle' | 'loading' | 'done'>('idle')
+
+  useEffect(() => {
+    if (downloadState !== 'done') {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setDownloadState('idle')
+    }, 1600)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [downloadState])
 
   const content = (
     <>
@@ -27,7 +40,7 @@ export function AnimatedActionButton({
         <AnimatePresence initial={false} mode="popLayout">
           {variant === 'github'
             ? renderGithubIcon(isHovered)
-            : renderMorphIcon(isHovered, variant)}
+            : renderMorphIcon(isHovered, variant, downloadState)}
         </AnimatePresence>
       </div>
       <span className="ml-2.5 text-[13px] font-medium tracking-tight">{label}</span>
@@ -44,6 +57,20 @@ export function AnimatedActionButton({
     whileTap: { scale: 0.96 },
   }
 
+  function handleDownloadClick() {
+    if (variant !== 'download') {
+      onClick?.()
+      return
+    }
+
+    setDownloadState('loading')
+    onClick?.()
+
+    window.setTimeout(() => {
+      setDownloadState('done')
+    }, 700)
+  }
+
   if (href) {
     return (
       <motion.a
@@ -51,6 +78,7 @@ export function AnimatedActionButton({
         className={className}
         download={download}
         href={href}
+        onClick={variant === 'download' ? handleDownloadClick : undefined}
         rel={download ? undefined : 'noreferrer'}
         target={download ? undefined : '_blank'}
       >
@@ -63,7 +91,7 @@ export function AnimatedActionButton({
     <motion.button
       {...hoverProps}
       className={className}
-      onClick={onClick}
+      onClick={variant === 'download' ? handleDownloadClick : onClick}
       type={type}
     >
       {content}
@@ -71,30 +99,58 @@ export function AnimatedActionButton({
   )
 }
 
-function renderMorphIcon(isHovered: boolean, variant: 'download' | 'upload') {
-  const BaseIcon = variant === 'download' ? Download : Upload
+function renderMorphIcon(
+  isHovered: boolean,
+  variant: 'download' | 'upload',
+  downloadState: 'idle' | 'loading' | 'done',
+) {
+  if (variant === 'download') {
+    if (downloadState === 'loading') {
+      return (
+        <motion.div
+          animate={{ opacity: 1, rotate: 360, scale: 1 }}
+          className="absolute inset-0 flex items-center justify-center"
+          exit={{ opacity: 0, scale: 0.5 }}
+          initial={{ opacity: 0, scale: 0.5 }}
+          key="download-loading"
+          transition={{ duration: 0.8, ease: 'linear', repeat: Number.POSITIVE_INFINITY }}
+        >
+          <LoaderCircle className="h-4 w-4" />
+        </motion.div>
+      )
+    }
 
-  return !isHovered ? (
+    if (downloadState === 'done') {
+      return (
+        <motion.div
+          animate={{ opacity: 1, scale: 1 }}
+          className="absolute inset-0 flex items-center justify-center"
+          exit={{ opacity: 0, scale: 0.5 }}
+          initial={{ opacity: 0, scale: 0.5 }}
+          key="download-done"
+          transition={{ damping: 25, stiffness: 600, type: 'spring' }}
+        >
+          <Check className="h-4 w-4" />
+        </motion.div>
+      )
+    }
+  }
+
+  const BaseIcon = variant === 'download' ? Download : Upload
+  const iconKey =
+    isHovered && variant === 'upload' ? `${variant}-check` : `${variant}-base`
+  const Icon = isHovered && variant === 'upload' ? Check : BaseIcon
+
+  return (
     <motion.div
       animate={{ opacity: 1, scale: 1 }}
       className="absolute inset-0 flex items-center justify-center"
       exit={{ opacity: 0, scale: 0.5 }}
       initial={{ opacity: 0, scale: 0.5 }}
-      key={`${variant}-base`}
+      key={iconKey}
       transition={{ damping: 25, stiffness: 600, type: 'spring' }}
     >
-      <BaseIcon className="h-4 w-4" />
-    </motion.div>
-  ) : (
-    <motion.div
-      animate={{ opacity: 1, scale: 1 }}
-      className="absolute inset-0 flex items-center justify-center"
-      exit={{ opacity: 0, scale: 0.5 }}
-      initial={{ opacity: 0, scale: 0.5 }}
-      key={`${variant}-check`}
-      transition={{ damping: 25, stiffness: 600, type: 'spring' }}
-    >
-      <Check className="h-4 w-4" />
+      <Icon className="h-4 w-4" />
     </motion.div>
   )
 }

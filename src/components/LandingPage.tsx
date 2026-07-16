@@ -3,6 +3,7 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { AnimatedActionButton } from './AnimatedActionButton'
 import Grainient from './Grainient'
+import { SparkLogo } from './SparkLogo'
 import { formatBytes, formatDuration } from '../utils/format'
 import {
   MAX_UPLOAD_BYTES,
@@ -91,8 +92,12 @@ export function LandingPage({ onEnterTool }: LandingPageProps) {
         <div className="relative mx-auto max-w-7xl px-4 pb-24 pt-5 sm:px-6 lg:px-8">
           <nav className="flex items-center justify-between gap-5 rounded-[26px] border border-white/10 bg-white/[0.03] px-4 py-3 backdrop-blur md:px-6">
             <div className="flex items-center gap-3 text-lg font-semibold tracking-tight text-white">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-sm">
-                MS
+              <span className="relative inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,#3b82f6_0%,#dbeafe_100%)]">
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-0 opacity-20 [background-image:radial-gradient(rgba(255,255,255,0.7)_0.6px,transparent_0.8px)] [background-position:0_0,3px_3px] [background-size:6px_6px] mix-blend-soft-light"
+                />
+                <SparkLogo className="relative h-4.5 w-4.5" />
               </span>
               MotionSplit
             </div>
@@ -114,19 +119,25 @@ export function LandingPage({ onEnterTool }: LandingPageProps) {
           </nav>
 
           <div className="mx-auto max-w-4xl pb-12 pt-24 text-center" data-hero-copy id="top">
-            <div className="mx-auto inline-flex h-20 w-20 items-center justify-center rounded-[28px] border border-white/12 bg-white/[0.07] text-xl text-white shadow-[0_14px_40px_rgba(0,0,0,0.22)]">
-              MS
+            <div className="relative mx-auto inline-flex h-20 w-20 items-center justify-center overflow-hidden rounded-[28px] border border-white/12 bg-[linear-gradient(180deg,#3b82f6_0%,#dbeafe_100%)] text-xl text-white shadow-[0_14px_40px_rgba(0,0,0,0.22)]">
+              <span
+                aria-hidden="true"
+                className="absolute inset-0 opacity-20 [background-image:radial-gradient(rgba(255,255,255,0.7)_0.8px,transparent_1px)] [background-position:0_0,4px_4px] [background-size:8px_8px] mix-blend-soft-light"
+              />
+              <SparkLogo className="relative h-10 w-10" />
             </div>
 
-            <h1 className="mx-auto mt-10 max-w-4xl text-[clamp(3.4rem,8vw,6rem)] font-semibold leading-[0.96] tracking-[-0.065em] text-white">
-              Turn video into
-              <span className="block">frame sequences, locally.</span>
+            <h1 className="mx-auto mt-10 max-w-4xl text-[clamp(3.8rem,8vw,6.4rem)] font-semibold leading-[0.96] tracking-[-0.065em] text-white">
+              MotionSplit
             </h1>
 
-            <p className="mx-auto mt-7 max-w-2xl text-xl leading-9 text-slate-300">
-              Extract every frame or at a chosen FPS.
-              <br />
-              Runs entirely in your browser. Nothing leaves your device.
+            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-300 sm:text-xl sm:leading-9">
+              Turn video into frame sequences, locally.
+            </p>
+
+            <p className="mx-auto mt-4 max-w-2xl text-base leading-8 text-slate-400 sm:text-lg">
+              Extract every frame or sample at a chosen FPS. Everything runs in your browser.
+              Nothing leaves your device.
             </p>
 
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
@@ -281,8 +292,12 @@ export function LandingPage({ onEnterTool }: LandingPageProps) {
 
         <footer className="mt-10 flex flex-col gap-7 border-t border-white/8 pt-8 text-sm text-slate-400 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3 text-white">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-sm">
-              MS
+            <span className="relative inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,#3b82f6_0%,#dbeafe_100%)]">
+              <span
+                aria-hidden="true"
+                className="absolute inset-0 opacity-20 [background-image:radial-gradient(rgba(255,255,255,0.7)_0.6px,transparent_0.8px)] [background-position:0_0,3px_3px] [background-size:6px_6px] mix-blend-soft-light"
+              />
+              <SparkLogo className="relative h-4.5 w-4.5" />
             </span>
             <span className="text-lg font-semibold">MotionSplit</span>
           </div>
