@@ -1,4 +1,5 @@
 import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
+import type { Dispatch, SetStateAction } from 'react'
 import JSZip from 'jszip'
 import { dropFFmpeg, getFFmpeg } from '../ffmpeg/client'
 import type {
@@ -11,6 +12,7 @@ import type {
 } from '../types'
 import { buildFrameName } from '../utils/naming'
 import { loadSettings, saveSettings } from '../utils/storage'
+import { parseFrameRate } from '../utils/video'
 import { readVideoMetadata } from '../utils/video'
 
 const INPUT_NAME = 'input-video'
@@ -116,9 +118,16 @@ export function useMotionSplit() {
     setStatusText('Extracting frames...')
     runStartRef.current = performance.now()
 
+    await ffmpeg.writeFile(INPUT_NAME, new Uint8Array(await videoFile.arrayBuffer()))
+
+    const sourceFrameRate =
+      settings.mode === 'every-frame'
+        ? await resolveSourceFrameRate(ffmpeg, metadata, setMetadata)
+        : metadata.frameRate
+
     const zip = new JSZip()
     const fps =
-      settings.mode === 'every-frame' ? metadata.frameRate ?? 30 : settings.fps
+      settings.mode === 'every-frame' ? sourceFrameRate ?? 30 : settings.fps
     const totalFrames = Math.max(
       1,
       Math.round((settings.endTime - settings.startTime) * fps),
@@ -131,8 +140,6 @@ export function useMotionSplit() {
         : ['-q:v', mapJpegQuality(settings.quality).toString()]
 
     setProgress((current) => ({ ...current, totalFrames }))
-
-    await ffmpeg.writeFile(INPUT_NAME, new Uint8Array(await videoFile.arrayBuffer()))
 
     try {
       let globalFrame = 1
@@ -380,5 +387,51 @@ function mapJpegQuality(quality: number) {
 }
 
 function isSupportedFile(file: File) {
-  return ['video/mp4', 'video/quicktime', 'video/webm'].includes(file.type)
+  if (['video/mp4', 'video/quicktime', 'video/webm'].includes(file.type)) {
+    return true
+  }
+
+  return /\.(mp4|mov|webm)$/i.test(file.name)
+}
+
+async function resolveSourceFrameRate(
+  ffmpeg: Awaited<ReturnType<typeof getFFmpeg>>,
+  metadata: VideoMetadata,
+  setMetadata: Dispatch<SetStateAction<VideoMetadata | null>>,
+) {
+  if (metadata.frameRate) {
+    return metadata.frameRate
+  }
+
+  const probeOutputName = `${INPUT_NAME}.fps.txt`
+
+  try {
+    await ffmpeg.ffprobe([
+      '-v',
+      'error',
+      '-select_streams',
+      'v:0',
+      '-show_entries',
+      'stream=avg_frame_rate,r_frame_rate',
+      '-of',
+      'default=noprint_wrappers=1',
+      INPUT_NAME,
+      '-o',
+      probeOutputName,
+    ])
+
+    const probeText = await ffmpeg.readFile(probeOutputName, 'utf8')
+    const parsedFrameRate = parseFrameRate(String(probeText))
+
+    if (parsedFrameRate) {
+      setMetadata((current) =>
+        current ? { ...current, frameRate: parsedFrameRate } : current,
+      )
+      return parsedFrameRate
+    }
+
+    return null
+  } finally {
+    ffmpeg.deleteFile(probeOutputName).catch(() => undefined)
+  }
 }
