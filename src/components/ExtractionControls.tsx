@@ -45,7 +45,7 @@ export function ExtractionControls({
       </div>
 
       <div className="mt-5 grid gap-5">
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 lg:grid-cols-2">
           <ModeCard
             active={settings.mode === 'every-frame'}
             description="Use the source cadence for maximum fidelity."
@@ -64,7 +64,7 @@ export function ExtractionControls({
           />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2">
           <label className="grid gap-2 text-sm text-slate-300">
             Target FPS
             <select
@@ -105,7 +105,7 @@ export function ExtractionControls({
           </label>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2">
           <label className="grid gap-2 text-sm text-slate-300">
             Start Time (s)
             <input
@@ -149,7 +149,7 @@ export function ExtractionControls({
           </label>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2">
           <fieldset className="grid gap-2 text-sm text-slate-300">
             <legend className="pb-1">Padding Digits</legend>
             <div className="grid grid-cols-3 gap-2">

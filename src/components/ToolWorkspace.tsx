@@ -1,24 +1,48 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { AnimatedActionButton } from './AnimatedActionButton'
 import { DownloadPanel } from './DownloadPanel'
 import { ExtractionControls } from './ExtractionControls'
+import Grainient from './Grainient'
 import { PreviewStrip } from './PreviewStrip'
 import { ProgressPanel } from './ProgressPanel'
 import { UploadZone } from './UploadZone'
 import { VideoDetailsCard } from './VideoDetailsCard'
 import { useMotionSplit } from '../hooks/useMotionSplit'
-import { formatBytes, formatDuration } from '../utils/format'
-import {
-  MAX_UPLOAD_BYTES,
-  MAX_VIDEO_DURATION_SECONDS,
-} from '../utils/limits'
 
 type ToolWorkspaceProps = {
   onBack: () => void
 }
 
+type StepId = 1 | 2 | 3 | 4
+
+const STEP_COPY: Record<
+  StepId,
+  { body: string; title: string }
+> = {
+  1: {
+    body: 'Add your source file and review what MotionSplit detected.',
+    title: 'Upload and review',
+  },
+  2: {
+    body: 'Adjust FPS, range, output format, naming, and quality.',
+    title: 'Extraction settings',
+  },
+  3: {
+    body: 'Run extraction, watch progress, and download your ZIP.',
+    title: 'Extract frames',
+  },
+  4: {
+    body: 'If MotionSplit helped, star the repo and keep it alive.',
+    title: 'Support open source',
+  },
+}
+
 export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
   const motionSplit = useMotionSplit()
+  const [currentStep, setCurrentStep] = useState<StepId>(1)
   const extracting = motionSplit.phase === 'extracting'
+  const hasSource = Boolean(motionSplit.metadata)
+  const hasArchive = Boolean(motionSplit.archiveInfo)
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -31,7 +55,7 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
         void motionSplit.startExtraction()
       }
 
-      if (isEscape && motionSplit.phase === 'extracting') {
+      if (isEscape && extracting) {
         event.preventDefault()
         motionSplit.cancelExtraction()
       }
@@ -39,7 +63,23 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [motionSplit])
+  }, [extracting, motionSplit])
+
+  useEffect(() => {
+    if (!hasSource) {
+      setCurrentStep(1)
+      return
+    }
+
+    if (hasArchive) {
+      setCurrentStep(4)
+      return
+    }
+
+    if (extracting || motionSplit.phase === 'done') {
+      setCurrentStep(3)
+    }
+  }, [extracting, hasArchive, hasSource, motionSplit.phase])
 
   useEffect(() => {
     if (!extracting) {
@@ -63,31 +103,26 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
     onBack()
   }
 
+  function goToStep(step: StepId) {
+    if (!isStepUnlocked(step, hasSource, hasArchive)) {
+      return
+    }
+
+    setCurrentStep(step)
+  }
+
   return (
     <div className="min-h-screen bg-[#050816] text-slate-50">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(78,117,255,0.22),transparent_24%),radial-gradient(circle_at_75%_0%,rgba(255,255,255,0.08),transparent_22%),linear-gradient(180deg,#08101d_0%,#050816_42%,#050816_100%)]" />
-      <div className="relative mx-auto flex min-h-screen w-full max-w-[1540px] flex-col px-4 py-5 sm:px-6 lg:px-8">
-        <header className="mb-6 flex items-center justify-between gap-4 border-b border-white/8 pb-5">
-          <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0.04))] text-sm font-semibold text-white shadow-[0_8px_32px_rgba(18,35,88,0.28)]">
-              MS
-            </div>
-            <div>
-              <div className="text-[1.7rem] font-semibold tracking-[-0.04em] text-white">
-                MotionSplit
-              </div>
-              <div className="text-sm text-slate-400">
-                Local frame extraction for scroll, sequence, and motion builds.
-              </div>
-            </div>
-          </div>
+      <div className="absolute inset-0">
+        <Grainient className="opacity-95" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_12%,rgba(255,255,255,0.2),transparent_28%),linear-gradient(180deg,rgba(5,8,22,0.08),rgba(5,8,22,0.62)_54%,#050816_100%)]" />
+      </div>
 
+      <div className="relative mx-auto flex min-h-screen w-full max-w-[1180px] flex-col px-4 py-5 sm:px-6 lg:px-8">
+        <header className="mb-8 flex items-center justify-end gap-3 border-b border-white/8 pb-5">
           <div className="flex items-center gap-3">
-            <div className="hidden rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-slate-300 md:block">
-              Hard caps: {formatBytes(MAX_UPLOAD_BYTES)} / {formatDuration(MAX_VIDEO_DURATION_SECONDS)}
-            </div>
             <button
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-slate-200 transition hover:bg-white/[0.08]"
+              className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-slate-200 transition hover:bg-white/[0.08]"
               onClick={handleBack}
               type="button"
             >
@@ -96,116 +131,271 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
           </div>
         </header>
 
-        <main className="grid flex-1 gap-6 xl:grid-cols-[320px_minmax(0,1fr)_390px]">
-          <section className="space-y-5">
-            <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-4 shadow-[0_24px_80px_rgba(2,6,15,0.34)] backdrop-blur sm:p-5">
-              <UploadZone
-                busy={motionSplit.phase === 'extracting'}
-                fileName={motionSplit.videoFile?.name ?? null}
-                onSelectFile={motionSplit.handleFileSelection}
+        <main className="pb-8">
+          <div className="px-2 pb-0 pt-1 sm:px-3">
+            <StepTopRail
+              currentStep={currentStep}
+              goToStep={goToStep}
+              hasArchive={hasArchive}
+              hasSource={hasSource}
+            />
+          </div>
+
+          <div>
+            <section className="min-w-0">
+              <ActiveStepCard
+                currentStep={currentStep}
+                handleAdvance={() => setCurrentStep(nextStep(currentStep))}
+                motionSplit={motionSplit}
               />
-
-              <div className="mt-4 flex flex-wrap gap-3 text-sm text-slate-400">
-                <span>Supported: MP4, MOV, WebM</span>
-                <span>Up to {formatBytes(MAX_UPLOAD_BYTES)}</span>
-                <span>Up to {formatDuration(MAX_VIDEO_DURATION_SECONDS)}</span>
-              </div>
-            </div>
-
-            <VideoDetailsCard
-              ffmpegReady={motionSplit.ffmpegReady}
-              metadata={motionSplit.metadata}
-            />
-
-            <InfoPanel
-              items={[
-                ['Max file size', formatBytes(MAX_UPLOAD_BYTES)],
-                ['Max video length', formatDuration(MAX_VIDEO_DURATION_SECONDS)],
-              ]}
-              note="Files past these limits are rejected before extraction starts."
-              title="Safety caps"
-            />
-
-            <InfoPanel
-              items={[
-                ['Private processing', 'Runs in your browser'],
-                ['JPG quality', 'Only affects JPG output'],
-                ['Every-frame mode', 'Uses source cadence'],
-              ]}
-              note="Best results come from clips with stable frame cadence and shorter time ranges."
-              title="Workflow notes"
-            />
-          </section>
-
-          <section className="space-y-5">
-            <PreviewStrip
-              previewFrames={motionSplit.previewFrames}
-              totalFrames={motionSplit.progress.totalFrames}
-            />
-
-            <ProgressPanel
-              phase={motionSplit.phase}
-              progress={motionSplit.progress}
-              onCancel={motionSplit.cancelExtraction}
-              statusText={motionSplit.statusText}
-            />
-
-            <DownloadPanel
-              archiveInfo={motionSplit.archiveInfo}
-              errorMessage={motionSplit.errorMessage}
-            />
-          </section>
-
-          <aside className="space-y-5 xl:sticky xl:top-5 xl:h-fit">
-            <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(12,18,36,0.86),rgba(7,11,22,0.92))] p-5 shadow-[0_30px_90px_rgba(3,7,17,0.4)]">
-              <div className="mb-4">
-                <div className="text-sm font-medium text-white">Extraction workspace</div>
-                <p className="mt-1 text-sm leading-6 text-slate-400">
-                  Configure the range, output, cadence, and naming. Extraction stays fully local.
-                </p>
-              </div>
-              <ExtractionControls
-                canExtract={motionSplit.canExtract}
-                disabled={motionSplit.phase === 'extracting'}
-                onCopyPattern={motionSplit.copyNamingPattern}
-                onReset={motionSplit.resetAll}
-                onStart={() => void motionSplit.startExtraction()}
-                settings={motionSplit.settings}
-                setSettings={motionSplit.setSettings}
-                videoDuration={motionSplit.metadata?.duration ?? 0}
-              />
-            </div>
-          </aside>
+            </section>
+          </div>
         </main>
       </div>
     </div>
   )
 }
 
-function InfoPanel({
-  items,
-  note,
+function ActiveStepCard({
+  currentStep,
+  handleAdvance,
+  motionSplit,
+}: {
+  currentStep: StepId
+  handleAdvance: () => void
+  motionSplit: ReturnType<typeof useMotionSplit>
+}) {
+  const canContinueFromUpload = Boolean(motionSplit.metadata)
+  const canContinueFromSettings = motionSplit.canExtract
+  const hasArchive = Boolean(motionSplit.archiveInfo)
+
+  if (currentStep === 1) {
+    return (
+      <section className="p-6">
+        <StepHeading
+          description="Supports MP4, MOV, and WebM. Nothing leaves your device."
+          title="Upload your video"
+        />
+        <div className="mt-6 rounded-[28px] border border-white/8 bg-black/10 p-5">
+          <UploadZone
+            busy={motionSplit.phase === 'extracting'}
+            fileName={motionSplit.videoFile?.name ?? null}
+            onSelectFile={motionSplit.handleFileSelection}
+          />
+          <div className="mt-5">
+            <VideoDetailsCard
+              ffmpegReady={motionSplit.ffmpegReady}
+              metadata={motionSplit.metadata}
+            />
+          </div>
+          <div className="mt-4 text-sm text-slate-400">
+            Supported: MP4, MOV, WebM
+          </div>
+        </div>
+        <StepFooter
+          actionLabel="Continue to settings"
+          disabled={!canContinueFromUpload}
+          onAction={handleAdvance}
+        />
+      </section>
+    )
+  }
+
+  if (currentStep === 2) {
+    return (
+      <section className="p-6">
+        <StepHeading
+          description="Choose cadence, range, format, naming, and quality before extraction."
+          title="Extraction settings"
+        />
+        <div className="mt-6">
+          <ExtractionControls
+            canExtract={motionSplit.canExtract}
+            disabled={motionSplit.phase === 'extracting'}
+            onCopyPattern={motionSplit.copyNamingPattern}
+            onReset={motionSplit.resetAll}
+            onStart={() => void motionSplit.startExtraction()}
+            settings={motionSplit.settings}
+            setSettings={motionSplit.setSettings}
+            videoDuration={motionSplit.metadata?.duration ?? 0}
+          />
+        </div>
+        <StepFooter
+          actionLabel="Continue to extract"
+          disabled={!canContinueFromSettings}
+          onAction={handleAdvance}
+        />
+      </section>
+    )
+  }
+
+  if (currentStep === 3) {
+    return (
+      <section className="p-6">
+        <StepHeading
+          description="Run the extraction, monitor progress, and download the ZIP when it is ready."
+          title="Extract frames"
+        />
+        <div className="mt-6 grid gap-5">
+          <PreviewStrip
+            previewFrames={motionSplit.previewFrames}
+            totalFrames={motionSplit.progress.totalFrames}
+          />
+          <ProgressPanel
+            phase={motionSplit.phase}
+            progress={motionSplit.progress}
+            onCancel={motionSplit.cancelExtraction}
+            statusText={motionSplit.statusText}
+          />
+          <DownloadPanel
+            archiveInfo={motionSplit.archiveInfo}
+            errorMessage={motionSplit.errorMessage}
+          />
+        </div>
+        <StepFooter
+          actionLabel={hasArchive ? 'Continue' : 'Stay here until ready'}
+          disabled={!hasArchive}
+          onAction={handleAdvance}
+        />
+      </section>
+    )
+  }
+
+  return (
+    <section className="p-6">
+      <StepHeading
+        description="MotionSplit is free and open source. If it helped, give the repo a star."
+        title="Support open source"
+      />
+      <div className="mt-6 rounded-[28px] border border-white/8 bg-black/10 p-6">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="text-lg font-semibold text-white">Finished extracting?</div>
+            <p className="mt-2 max-w-xl text-sm leading-7 text-slate-400">
+              Download your archive, ship your sequence, and star MotionSplit on GitHub
+              if you want to support the project.
+            </p>
+          </div>
+          <AnimatedActionButton
+            href="https://github.com/abhijeetkakade1234/MotionSplit"
+            label="Star on GitHub"
+            variant="github"
+          />
+        </div>
+      </div>
+      <div className="mt-5">
+        <DownloadPanel
+          archiveInfo={motionSplit.archiveInfo}
+          errorMessage={motionSplit.errorMessage}
+        />
+      </div>
+    </section>
+  )
+}
+
+function StepHeading({
+  description,
   title,
 }: {
-  items: [string, string][]
-  note: string
+  description: string
   title: string
 }) {
   return (
-    <section className="rounded-[28px] border border-white/10 bg-white/[0.025] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.22)]">
-      <h2 className="text-lg font-semibold text-white">{title}</h2>
-      <div className="mt-4 space-y-3">
-        {items.map(([label, value]) => (
-          <div
-            className="flex items-center justify-between gap-4 rounded-2xl border border-white/8 bg-black/10 px-4 py-3"
-            key={label}
-          >
-            <span className="text-sm text-slate-400">{label}</span>
-            <span className="text-sm font-medium text-white">{value}</span>
-          </div>
-        ))}
-      </div>
-      <p className="mt-4 text-sm leading-6 text-slate-400">{note}</p>
-    </section>
+    <div>
+      <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-white">{title}</h2>
+      <p className="mt-2 text-base leading-8 text-slate-400">{description}</p>
+    </div>
   )
+}
+
+function StepFooter({
+  actionLabel,
+  disabled,
+  onAction,
+}: {
+  actionLabel: string
+  disabled: boolean
+  onAction: () => void
+}) {
+  return (
+    <div className="mt-6 flex justify-end border-t border-white/8 pt-5">
+      <button
+        className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[linear-gradient(90deg,#6ca2ff_0%,#2e67ee_100%)] px-6 text-sm font-medium text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
+        disabled={disabled}
+        onClick={onAction}
+        type="button"
+      >
+        {actionLabel}
+      </button>
+    </div>
+  )
+}
+
+function StepTopRail({
+  currentStep,
+  goToStep,
+  hasArchive,
+  hasSource,
+}: {
+  currentStep: StepId
+  goToStep: (step: StepId) => void
+  hasArchive: boolean
+  hasSource: boolean
+}) {
+  return (
+    <div className="mb-2 overflow-x-auto pb-4">
+      <div className="flex min-w-[720px] items-center gap-3">
+        {([1, 2, 3, 4] as StepId[]).map((step, index, steps) => {
+          const active = currentStep === step
+          const complete = step < currentStep && isStepUnlocked(step, hasSource, hasArchive)
+          const locked = !isStepUnlocked(step, hasSource, hasArchive)
+
+          return (
+            <div className="flex min-w-0 flex-1 items-center gap-3" key={step}>
+              <button
+                className={`grid h-3.5 w-3.5 shrink-0 place-items-center rounded-full transition ${
+                  active || complete
+                    ? 'bg-white shadow-[0_0_0_4px_rgba(255,255,255,0.08)]'
+                    : 'border border-white/15 bg-transparent'
+                } ${locked ? 'opacity-45' : 'hover:scale-110'}`}
+                disabled={locked}
+                onClick={() => goToStep(step)}
+                type="button"
+              >
+                <span className="sr-only">{STEP_COPY[step].title}</span>
+              </button>
+              <div className="min-w-0">
+                <div className={`truncate text-sm ${active ? 'text-white' : 'text-slate-400'}`}>
+                  {STEP_COPY[step].title}
+                </div>
+              </div>
+              {index < steps.length - 1 ? (
+                <div className="h-px flex-1 bg-white/10" />
+              ) : null}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function isStepUnlocked(step: StepId, hasSource: boolean, hasArchive: boolean) {
+  if (step === 1) {
+    return true
+  }
+
+  if (step === 4) {
+    return hasArchive
+  }
+
+  return hasSource
+}
+
+function nextStep(step: StepId): StepId {
+  if (step === 4) {
+    return 4
+  }
+
+  return (step + 1) as StepId
 }
