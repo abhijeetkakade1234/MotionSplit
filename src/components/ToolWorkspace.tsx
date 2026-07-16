@@ -42,38 +42,40 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
 
   return (
     <div className="min-h-screen bg-[#050816] text-slate-50">
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
-        <header className="mb-6 rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(12,18,36,0.96),rgba(8,12,24,0.82))] px-5 py-5 shadow-[0_20px_80px_rgba(2,6,15,0.5)]">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <button
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs uppercase tracking-[0.22em] text-slate-300 transition hover:bg-white/[0.08]"
-                onClick={onBack}
-                type="button"
-              >
-                Back to landing
-              </button>
-              <h1 className="mt-5 text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
-                MotionSplit tool
-              </h1>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(78,117,255,0.22),transparent_24%),radial-gradient(circle_at_75%_0%,rgba(255,255,255,0.08),transparent_22%),linear-gradient(180deg,#08101d_0%,#050816_42%,#050816_100%)]" />
+      <div className="relative mx-auto flex min-h-screen w-full max-w-[1540px] flex-col px-4 py-5 sm:px-6 lg:px-8">
+        <header className="mb-6 flex items-center justify-between gap-4 border-b border-white/8 pb-5">
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0.04))] text-sm font-semibold text-white shadow-[0_8px_32px_rgba(18,35,88,0.28)]">
+              MS
             </div>
-
-            <div className="grid gap-2 rounded-[24px] border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-slate-300">
-              <div>Hard cap: {formatBytes(MAX_UPLOAD_BYTES)}</div>
-              <div>Hard cap: {formatDuration(MAX_VIDEO_DURATION_SECONDS)}</div>
-              <div>Modes: every frame or target FPS</div>
+            <div>
+              <div className="text-[1.7rem] font-semibold tracking-[-0.04em] text-white">
+                MotionSplit
+              </div>
+              <div className="text-sm text-slate-400">
+                Local frame extraction for scroll, sequence, and motion builds.
+              </div>
             </div>
           </div>
 
-          <p className="mt-5 max-w-3xl text-base leading-7 text-slate-300">
-            Extract frames locally for scroll narratives, image planes, product storytelling,
-            and motion-heavy web builds. Files stay on-device from upload to ZIP.
-          </p>
+          <div className="flex items-center gap-3">
+            <div className="hidden rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-slate-300 md:block">
+              Hard caps: {formatBytes(MAX_UPLOAD_BYTES)} / {formatDuration(MAX_VIDEO_DURATION_SECONDS)}
+            </div>
+            <button
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-slate-200 transition hover:bg-white/[0.08]"
+              onClick={onBack}
+              type="button"
+            >
+              Back to landing
+            </button>
+          </div>
         </header>
 
-        <main className="grid flex-1 gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(380px,0.9fr)]">
-          <section className="space-y-6">
-            <div className="rounded-[28px] border border-white/10 bg-white/[0.035] p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.02)] backdrop-blur sm:p-6">
+        <main className="grid flex-1 gap-6 xl:grid-cols-[320px_minmax(0,1fr)_390px]">
+          <section className="space-y-5">
+            <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-4 shadow-[0_24px_80px_rgba(2,6,15,0.34)] backdrop-blur sm:p-5">
               <UploadZone
                 busy={motionSplit.phase === 'extracting'}
                 fileName={motionSplit.videoFile?.name ?? null}
@@ -92,22 +94,30 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
               metadata={motionSplit.metadata}
             />
 
-            <PreviewStrip
-              previewFrames={motionSplit.previewFrames}
-              totalFrames={motionSplit.progress.totalFrames}
+            <InfoPanel
+              items={[
+                ['Max file size', formatBytes(MAX_UPLOAD_BYTES)],
+                ['Max video length', formatDuration(MAX_VIDEO_DURATION_SECONDS)],
+              ]}
+              note="Files past these limits are rejected before extraction starts."
+              title="Safety caps"
+            />
+
+            <InfoPanel
+              items={[
+                ['Private processing', 'Runs in your browser'],
+                ['JPG quality', 'Only affects JPG output'],
+                ['Every-frame mode', 'Uses source cadence'],
+              ]}
+              note="Best results come from clips with stable frame cadence and shorter time ranges."
+              title="Workflow notes"
             />
           </section>
 
-          <section className="space-y-6">
-            <ExtractionControls
-              canExtract={motionSplit.canExtract}
-              disabled={motionSplit.phase === 'extracting'}
-              onCopyPattern={motionSplit.copyNamingPattern}
-              onReset={motionSplit.resetAll}
-              onStart={() => void motionSplit.startExtraction()}
-              settings={motionSplit.settings}
-              setSettings={motionSplit.setSettings}
-              videoDuration={motionSplit.metadata?.duration ?? 0}
+          <section className="space-y-5">
+            <PreviewStrip
+              previewFrames={motionSplit.previewFrames}
+              totalFrames={motionSplit.progress.totalFrames}
             />
 
             <ProgressPanel
@@ -121,21 +131,58 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
               archiveInfo={motionSplit.archiveInfo}
               errorMessage={motionSplit.errorMessage}
             />
-
-            <div className="rounded-[28px] border border-white/10 bg-white/[0.025] p-5">
-              <div className="text-xs uppercase tracking-[0.22em] text-[#93a4d7]">
-                Workflow notes
-              </div>
-              <ul className="mt-4 grid gap-3 text-sm leading-7 text-slate-300">
-                <li>Everything runs in-browser with ffmpeg.wasm.</li>
-                <li>No frames or clips are uploaded to any server.</li>
-                <li>JPG quality only affects JPG output. PNG stays lossless.</li>
-                <li>Source FPS is probed before every-frame extraction when needed.</li>
-              </ul>
-            </div>
           </section>
+
+          <aside className="space-y-5 xl:sticky xl:top-5 xl:h-fit">
+            <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(12,18,36,0.86),rgba(7,11,22,0.92))] p-5 shadow-[0_30px_90px_rgba(3,7,17,0.4)]">
+              <div className="mb-4">
+                <div className="text-sm font-medium text-white">Extraction workspace</div>
+                <p className="mt-1 text-sm leading-6 text-slate-400">
+                  Configure the range, output, cadence, and naming. Extraction stays fully local.
+                </p>
+              </div>
+              <ExtractionControls
+                canExtract={motionSplit.canExtract}
+                disabled={motionSplit.phase === 'extracting'}
+                onCopyPattern={motionSplit.copyNamingPattern}
+                onReset={motionSplit.resetAll}
+                onStart={() => void motionSplit.startExtraction()}
+                settings={motionSplit.settings}
+                setSettings={motionSplit.setSettings}
+                videoDuration={motionSplit.metadata?.duration ?? 0}
+              />
+            </div>
+          </aside>
         </main>
       </div>
     </div>
+  )
+}
+
+function InfoPanel({
+  items,
+  note,
+  title,
+}: {
+  items: [string, string][]
+  note: string
+  title: string
+}) {
+  return (
+    <section className="rounded-[28px] border border-white/10 bg-white/[0.025] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.22)]">
+      <h2 className="text-lg font-semibold text-white">{title}</h2>
+      <div className="mt-4 space-y-3">
+        {items.map(([label, value]) => (
+          <div
+            className="flex items-center justify-between gap-4 rounded-2xl border border-white/8 bg-black/10 px-4 py-3"
+            key={label}
+          >
+            <span className="text-sm text-slate-400">{label}</span>
+            <span className="text-sm font-medium text-white">{value}</span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-4 text-sm leading-6 text-slate-400">{note}</p>
+    </section>
   )
 }

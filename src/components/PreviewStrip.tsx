@@ -10,15 +10,15 @@ export function PreviewStrip({
   totalFrames,
 }: PreviewStripProps) {
   return (
-    <section className="rounded-[28px] border border-white/10 bg-zinc-900/75 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.26)]">
+    <section className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.02))] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-white">Preview Strip</h2>
-          <p className="mt-1 text-sm text-zinc-400">
-            First frames stay visible as extraction progresses.
+          <h2 className="text-lg font-semibold text-white">Preview</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            First extracted frames stay pinned here while the run continues.
           </p>
         </div>
-        <div className="text-sm text-zinc-500">
+        <div className="text-sm text-slate-500">
           {totalFrames
             ? `${previewFrames.length}/${totalFrames} visible`
             : `${previewFrames.length} visible`}
@@ -30,22 +30,22 @@ export function PreviewStrip({
           {previewFrames.map((frame) => (
             <figure
               key={frame.name}
-              className="min-w-28 overflow-hidden rounded-2xl border border-white/10 bg-zinc-950"
+              className="min-w-30 overflow-hidden rounded-[22px] border border-white/10 bg-[#09111f]"
             >
               <img
                 alt={frame.name}
-                className="h-24 w-28 object-cover"
+                className="h-28 w-30 object-cover"
                 loading="lazy"
                 src={frame.url}
               />
-              <figcaption className="truncate border-t border-white/10 px-3 py-2 text-xs text-zinc-500">
+              <figcaption className="truncate border-t border-white/10 px-3 py-2 text-xs text-slate-500">
                 {frame.name}
               </figcaption>
             </figure>
           ))}
         </div>
       ) : (
-        <div className="mt-4 rounded-2xl border border-dashed border-white/10 bg-white/3 px-4 py-8 text-sm text-zinc-500">
+        <div className="mt-4 rounded-[24px] border border-dashed border-white/10 bg-black/12 px-4 py-10 text-sm text-slate-500">
           Extracted frames will appear here.
         </div>
       )}

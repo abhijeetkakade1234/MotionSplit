@@ -27,16 +27,16 @@ export function ExtractionControls({
   videoDuration,
 }: ExtractionControlsProps) {
   return (
-    <section className="rounded-[28px] border border-white/10 bg-zinc-900/75 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.26)]">
+    <section className="rounded-[28px] border border-white/8 bg-black/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-white">Extraction Options</h2>
-          <p className="mt-1 text-sm text-zinc-400">
+          <h2 className="text-lg font-semibold text-white">Extraction settings</h2>
+          <p className="mt-1 text-sm text-slate-400">
             Cmd/Ctrl+Enter extracts. Escape cancels mid-run.
           </p>
         </div>
         <button
-          className="rounded-2xl border border-white/10 px-4 py-2 text-sm text-zinc-300 transition hover:border-white/20 hover:bg-white/5"
+          className="rounded-2xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:border-white/20 hover:bg-white/5"
           onClick={onReset}
           type="button"
         >
@@ -65,10 +65,10 @@ export function ExtractionControls({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="grid gap-2 text-sm text-zinc-300">
+          <label className="grid gap-2 text-sm text-slate-300">
             Target FPS
             <select
-              className="min-h-11 rounded-2xl border border-white/10 bg-zinc-950 px-4 text-white outline-none transition focus:border-white/25"
+              className="min-h-11 rounded-2xl border border-white/10 bg-[#0a101d] px-4 text-white outline-none transition focus:border-[#5080ff]"
               disabled={disabled || settings.mode !== 'custom-fps'}
               onChange={(event) =>
                 setSettings((current) => ({
@@ -86,10 +86,10 @@ export function ExtractionControls({
             </select>
           </label>
 
-          <label className="grid gap-2 text-sm text-zinc-300">
+          <label className="grid gap-2 text-sm text-slate-300">
             Output Format
             <select
-              className="min-h-11 rounded-2xl border border-white/10 bg-zinc-950 px-4 text-white outline-none transition focus:border-white/25"
+              className="min-h-11 rounded-2xl border border-white/10 bg-[#0a101d] px-4 text-white outline-none transition focus:border-[#5080ff]"
               disabled={disabled}
               onChange={(event) =>
                 setSettings((current) => ({
@@ -106,10 +106,10 @@ export function ExtractionControls({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="grid gap-2 text-sm text-zinc-300">
+          <label className="grid gap-2 text-sm text-slate-300">
             Start Time (s)
             <input
-              className="min-h-11 rounded-2xl border border-white/10 bg-zinc-950 px-4 text-white outline-none transition focus:border-white/25"
+              className="min-h-11 rounded-2xl border border-white/10 bg-[#0a101d] px-4 text-white outline-none transition focus:border-[#5080ff]"
               disabled={disabled}
               max={videoDuration || undefined}
               min={0}
@@ -125,10 +125,10 @@ export function ExtractionControls({
             />
           </label>
 
-          <label className="grid gap-2 text-sm text-zinc-300">
+          <label className="grid gap-2 text-sm text-slate-300">
             End Time (s)
             <input
-              className="min-h-11 rounded-2xl border border-white/10 bg-zinc-950 px-4 text-white outline-none transition focus:border-white/25"
+              className="min-h-11 rounded-2xl border border-white/10 bg-[#0a101d] px-4 text-white outline-none transition focus:border-[#5080ff]"
               disabled={disabled}
               max={videoDuration || undefined}
               min={settings.startTime}
@@ -150,7 +150,7 @@ export function ExtractionControls({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <fieldset className="grid gap-2 text-sm text-zinc-300">
+          <fieldset className="grid gap-2 text-sm text-slate-300">
             <legend className="pb-1">Padding Digits</legend>
             <div className="flex gap-2">
               {paddingOptions.map((digits) => (
@@ -158,8 +158,8 @@ export function ExtractionControls({
                   key={digits}
                   className={`min-h-11 flex-1 rounded-2xl border px-4 text-sm transition ${
                     settings.padding === digits
-                      ? 'border-white bg-white text-zinc-950'
-                      : 'border-white/10 bg-zinc-950 text-zinc-300 hover:border-white/20'
+                      ? 'border-[#5a87ff] bg-[#15274d] text-white'
+                      : 'border-white/10 bg-[#0a101d] text-slate-300 hover:border-white/20'
                   }`}
                   disabled={disabled}
                   onClick={() =>
@@ -173,13 +173,13 @@ export function ExtractionControls({
             </div>
           </fieldset>
 
-          <div className="grid gap-2 text-sm text-zinc-300">
+          <div className="grid gap-2 text-sm text-slate-300">
             <div className="flex items-center justify-between">
               <span>JPG Quality</span>
-              <span className="text-zinc-500">{settings.quality}%</span>
+              <span className="text-slate-500">{settings.quality}%</span>
             </div>
             <input
-              className="accent-white"
+              className="accent-[#5a87ff]"
               disabled={disabled || settings.format !== 'jpg'}
               max={100}
               min={40}
@@ -195,18 +195,18 @@ export function ExtractionControls({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-zinc-950/80 p-4">
+        <div className="rounded-2xl border border-white/10 bg-[#0a101d] p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+              <div className="text-xs uppercase tracking-[0.2em] text-slate-500">
                 Naming Pattern
               </div>
-              <div className="mt-2 font-mono text-sm text-zinc-200">
+              <div className="mt-2 font-mono text-sm text-slate-100">
                 frame{'0'.repeat(settings.padding - 1)}1.{settings.format}
               </div>
             </div>
             <button
-              className="rounded-2xl border border-white/10 px-4 py-2 text-sm text-zinc-300 transition hover:border-white/20 hover:bg-white/5"
+              className="rounded-2xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:border-white/20 hover:bg-white/5"
               onClick={onCopyPattern}
               type="button"
             >
@@ -216,7 +216,7 @@ export function ExtractionControls({
         </div>
 
         <button
-          className="min-h-12 rounded-2xl bg-white px-5 text-sm font-medium text-zinc-950 transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
+          className="min-h-12 rounded-2xl bg-[linear-gradient(90deg,#6ca2ff_0%,#2e67ee_100%)] px-5 text-sm font-medium text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
           disabled={!canExtract || disabled}
           onClick={onStart}
           type="button"
@@ -240,14 +240,14 @@ function ModeCard({ active, description, onClick, title }: ModeCardProps) {
     <button
       className={`rounded-2xl border p-4 text-left transition ${
         active
-          ? 'border-white/30 bg-white/9'
-          : 'border-white/10 bg-white/4 hover:border-white/20 hover:bg-white/6'
+          ? 'border-[#5a87ff] bg-[#12203f]'
+          : 'border-white/10 bg-[#0a101d] hover:border-white/20 hover:bg-white/6'
       }`}
       onClick={onClick}
       type="button"
     >
       <div className="text-sm font-medium text-white">{title}</div>
-      <div className="mt-2 text-sm leading-6 text-zinc-400">{description}</div>
+      <div className="mt-2 text-sm leading-6 text-slate-400">{description}</div>
     </button>
   )
 }

@@ -32,7 +32,7 @@ export function VideoDetailsCard({
       </div>
 
       {metadata ? (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-4 overflow-hidden rounded-[24px] border border-white/10 bg-black/10">
           <Metric label="Filename" value={metadata.name} />
           <Metric label="Duration" value={formatDuration(metadata.duration)} />
           <Metric label="Resolution" value={`${metadata.width} x ${metadata.height}`} />
@@ -49,11 +49,9 @@ export function VideoDetailsCard({
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/4 px-4 py-3">
+    <div className="grid gap-2 border-b border-white/8 px-4 py-3 last:border-b-0">
       <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">{label}</div>
-      <div className="mt-2 truncate text-sm font-medium text-white sm:text-base">
-        {value}
-      </div>
+      <div className="truncate text-sm font-medium text-white sm:text-base">{value}</div>
     </div>
   )
 }

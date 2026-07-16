@@ -25,10 +25,10 @@ export function UploadZone({
   return (
     <>
       <button
-        className={`flex min-h-[300px] w-full flex-col items-center justify-center rounded-[28px] border border-dashed px-6 text-center transition ${
+        className={`flex min-h-[280px] w-full flex-col items-center justify-center rounded-[28px] border border-dashed px-6 text-center transition ${
           dragActive
-            ? 'border-white/35 bg-white/8'
-            : 'border-white/14 bg-gradient-to-b from-white/8 to-white/[0.03] hover:border-white/25 hover:bg-white/7'
+            ? 'border-[#5f8fff] bg-[#0d1832]'
+            : 'border-[#4b79ef]/60 bg-[linear-gradient(180deg,rgba(14,22,42,0.92),rgba(8,13,26,0.98))] hover:border-[#7aa4ff] hover:bg-[#0d1730]'
         }`}
         onClick={() => inputRef.current?.click()}
         onDragLeave={() => setDragActive(false)}
@@ -43,17 +43,17 @@ export function UploadZone({
         }}
         type="button"
       >
-        <div className="rounded-2xl border border-white/10 bg-zinc-950/80 px-4 py-2 text-xs uppercase tracking-[0.24em] text-zinc-400">
+        <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-2 text-xs uppercase tracking-[0.24em] text-slate-400">
           MP4 / MOV / WebM
         </div>
         <h2 className="mt-5 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
           {fileName ? 'Replace current video' : 'Drop video to begin'}
         </h2>
-        <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-400 sm:text-base">
+        <p className="mt-3 max-w-xl text-sm leading-6 text-slate-400 sm:text-base">
           Drag a source file here or click to browse. MotionSplit extracts frames
           locally and packages them into a ZIP without leaving your device.
         </p>
-        <div className="mt-6 rounded-2xl border border-white/10 bg-white/4 px-5 py-3 text-sm font-medium text-zinc-200">
+        <div className="mt-6 rounded-2xl border border-white/10 bg-white/4 px-5 py-3 text-sm font-medium text-slate-100">
           {busy ? 'Extraction running' : fileName ?? 'Choose a video file'}
         </div>
       </button>

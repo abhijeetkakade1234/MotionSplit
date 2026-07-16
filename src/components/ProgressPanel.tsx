@@ -17,11 +17,11 @@ export function ProgressPanel({
   const busy = phase === 'loading' || phase === 'extracting'
 
   return (
-    <section className="rounded-[28px] border border-white/10 bg-zinc-900/75 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.26)]">
+    <section className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.02))] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-white">Progress</h2>
-          <p className="mt-1 text-sm text-zinc-400">{statusText}</p>
+          <p className="mt-1 text-sm text-slate-400">{statusText}</p>
         </div>
 
         {phase === 'extracting' ? (
@@ -37,7 +37,7 @@ export function ProgressPanel({
 
       <div className="mt-5 overflow-hidden rounded-full bg-white/8">
         <div
-          className="h-3 rounded-full bg-white transition-[width] duration-300"
+          className="h-3 rounded-full bg-[linear-gradient(90deg,#6ca2ff_0%,#2e67ee_100%)] transition-[width] duration-300"
           style={{ width: `${Math.min(progress.percent, 100)}%` }}
         />
       </div>
@@ -62,17 +62,17 @@ export function ProgressPanel({
         />
       </div>
 
-      <div className="mt-4 grid gap-2 text-sm text-zinc-400">
+      <div className="mt-4 grid gap-2 text-sm text-slate-400">
         <div className="flex items-center justify-between gap-3">
           <span>Frames Extracted</span>
-          <span className="text-zinc-200">
+          <span className="text-slate-100">
             {progress.extractedFrames}
             {progress.totalFrames ? ` / ${progress.totalFrames}` : ''}
           </span>
         </div>
         <div className="flex items-center justify-between gap-3">
           <span>Processed Range</span>
-          <span className="text-zinc-200">
+          <span className="text-slate-100">
             {formatDuration(progress.processedSeconds)}
           </span>
         </div>
@@ -83,8 +83,8 @@ export function ProgressPanel({
 
 function Metric({ title, value }: { title: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/4 px-4 py-3">
-      <div className="text-xs uppercase tracking-[0.2em] text-zinc-500">{title}</div>
+    <div className="rounded-2xl border border-white/10 bg-black/10 px-4 py-3">
+      <div className="text-xs uppercase tracking-[0.2em] text-slate-500">{title}</div>
       <div className="mt-2 text-xl font-semibold text-white">{value}</div>
     </div>
   )
