@@ -42,3 +42,5 @@ export type ArchiveInfo = {
   frameCount: number
   sizeBytes: number
 }
+
+export type AppView = 'landing' | 'tool'

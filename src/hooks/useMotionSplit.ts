@@ -14,6 +14,10 @@ import { buildFrameName } from '../utils/naming'
 import { loadSettings, saveSettings } from '../utils/storage'
 import { parseFrameRate } from '../utils/video'
 import { readVideoMetadata } from '../utils/video'
+import {
+  MAX_UPLOAD_BYTES,
+  MAX_VIDEO_DURATION_SECONDS,
+} from '../utils/limits'
 
 const INPUT_NAME = 'input-video'
 const PREVIEW_LIMIT = 18
@@ -68,7 +72,14 @@ export function useMotionSplit() {
 
   async function handleFileSelection(file: File) {
     if (!isSupportedFile(file)) {
-      setErrorMessage('Unsupported file type. Use MP4, MOV, or WebM.')
+      rejectFile('Unsupported file type. Use MP4, MOV, or WebM.')
+      return
+    }
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      rejectFile(
+        `This file is larger than the ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} MB safety cap.`,
+      )
       return
     }
 
@@ -83,6 +94,14 @@ export function useMotionSplit() {
 
     try {
       const parsedMetadata = await readVideoMetadata(file)
+
+      if (parsedMetadata.duration > MAX_VIDEO_DURATION_SECONDS) {
+        rejectFile(
+          `This video is longer than the ${Math.round(MAX_VIDEO_DURATION_SECONDS / 60)} minute safety cap.`,
+        )
+        return
+      }
+
       setMetadata(parsedMetadata)
       setSettings((current) => ({
         ...current,
@@ -349,6 +368,17 @@ export function useMotionSplit() {
     revokePreviewUrls(previewUrlsRef.current)
     previewUrlsRef.current = []
     setPreviewFrames([])
+  }
+
+  function rejectFile(message: string) {
+    clearArchive()
+    clearPreviews()
+    setVideoFile(null)
+    setMetadata(null)
+    setPhase('error')
+    setStatusText('Select a different source file to continue.')
+    setProgress(INITIAL_PROGRESS)
+    setErrorMessage(message)
   }
 }
 
