@@ -4,13 +4,9 @@ import { AnimatedActionButton } from './AnimatedActionButton'
 
 type DownloadPanelProps = {
   archiveInfo: ArchiveInfo | null
-  errorMessage: string | null
 }
 
-export function DownloadPanel({
-  archiveInfo,
-  errorMessage,
-}: DownloadPanelProps) {
+export function DownloadPanel({ archiveInfo }: DownloadPanelProps) {
   return (
     <section className="rounded-[28px] border border-white/10 bg-zinc-900/75 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.26)]">
       <div className="flex items-center justify-between gap-4">
@@ -21,12 +17,6 @@ export function DownloadPanel({
           </p>
         </div>
       </div>
-
-      {errorMessage ? (
-        <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-          {errorMessage}
-        </div>
-      ) : null}
 
       {archiveInfo ? (
         <div className="mt-4 space-y-4">
@@ -50,7 +40,7 @@ export function DownloadPanel({
         </div>
       ) : (
         <div className="mt-4 rounded-2xl border border-dashed border-white/10 bg-white/3 px-4 py-6 text-sm text-zinc-500">
-          Extract frames to unlock the archive.
+          Your ZIP appears here when extraction finishes.
         </div>
       )}
     </section>

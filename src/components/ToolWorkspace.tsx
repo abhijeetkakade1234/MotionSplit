@@ -6,7 +6,6 @@ import Grainient from './Grainient'
 import { PreviewStrip } from './PreviewStrip'
 import { ProgressPanel } from './ProgressPanel'
 import { UploadZone } from './UploadZone'
-import { VideoDetailsCard } from './VideoDetailsCard'
 import { useMotionSplit } from '../hooks/useMotionSplit'
 
 type ToolWorkspaceProps = {
@@ -40,6 +39,7 @@ const STEP_COPY: Record<
 export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
   const motionSplit = useMotionSplit()
   const [currentStep, setCurrentStep] = useState<StepId>(1)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
   const extracting = motionSplit.phase === 'extracting'
   const hasSource = Boolean(motionSplit.metadata)
   const hasArchive = Boolean(motionSplit.archiveInfo)
@@ -95,6 +95,19 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
   }, [extracting])
 
+  useEffect(() => {
+    if (!motionSplit.errorMessage) {
+      return
+    }
+
+    setToastMessage(motionSplit.errorMessage)
+    const timeoutId = window.setTimeout(() => {
+      setToastMessage(null)
+    }, 3600)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [motionSplit.errorMessage])
+
   function handleBack() {
     if (extracting && !window.confirm('Extraction is still running. Leave the tool?')) {
       return
@@ -119,6 +132,12 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
       </div>
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-[1180px] flex-col px-4 py-5 sm:px-6 lg:px-8">
+        {toastMessage ? (
+          <div className="fixed right-4 top-4 z-50 max-w-sm rounded-2xl border border-red-500/20 bg-[#2a1118]/92 px-4 py-3 text-sm text-red-100 shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur xl:right-6 xl:top-6">
+            {toastMessage}
+          </div>
+        ) : null}
+
         <header className="mb-8 flex items-center justify-end gap-3 border-b border-white/8 pb-5">
           <div className="flex items-center gap-3">
             <button
@@ -146,6 +165,7 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
               <ActiveStepCard
                 currentStep={currentStep}
                 handleAdvance={() => setCurrentStep(nextStep(currentStep))}
+                handleRetreat={() => setCurrentStep(previousStep(currentStep))}
                 motionSplit={motionSplit}
               />
             </section>
@@ -159,19 +179,20 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
 function ActiveStepCard({
   currentStep,
   handleAdvance,
+  handleRetreat,
   motionSplit,
 }: {
   currentStep: StepId
   handleAdvance: () => void
+  handleRetreat: () => void
   motionSplit: ReturnType<typeof useMotionSplit>
 }) {
   const canContinueFromUpload = Boolean(motionSplit.metadata)
   const canContinueFromSettings = motionSplit.canExtract
-  const hasArchive = Boolean(motionSplit.archiveInfo)
 
   if (currentStep === 1) {
     return (
-      <section className="p-6">
+      <section className="p-6 pt-8">
         <StepHeading
           description="Supports MP4, MOV, and WebM. Nothing leaves your device."
           title="Upload your video"
@@ -182,12 +203,6 @@ function ActiveStepCard({
             fileName={motionSplit.videoFile?.name ?? null}
             onSelectFile={motionSplit.handleFileSelection}
           />
-          <div className="mt-5">
-            <VideoDetailsCard
-              ffmpegReady={motionSplit.ffmpegReady}
-              metadata={motionSplit.metadata}
-            />
-          </div>
           <div className="mt-4 text-sm text-slate-400">
             Supported: MP4, MOV, WebM
           </div>
@@ -196,6 +211,7 @@ function ActiveStepCard({
           actionLabel="Continue to settings"
           disabled={!canContinueFromUpload}
           onAction={handleAdvance}
+          onBack={currentStep > 1 ? handleRetreat : undefined}
         />
       </section>
     )
@@ -203,7 +219,7 @@ function ActiveStepCard({
 
   if (currentStep === 2) {
     return (
-      <section className="p-6">
+      <section className="p-6 pt-8">
         <StepHeading
           description="Choose cadence, range, format, naming, and quality before extraction."
           title="Extraction settings"
@@ -221,9 +237,10 @@ function ActiveStepCard({
           />
         </div>
         <StepFooter
-          actionLabel="Continue to extract"
+          actionLabel="Next"
           disabled={!canContinueFromSettings}
           onAction={handleAdvance}
+          onBack={handleRetreat}
         />
       </section>
     )
@@ -231,7 +248,7 @@ function ActiveStepCard({
 
   if (currentStep === 3) {
     return (
-      <section className="p-6">
+      <section className="p-6 pt-8">
         <StepHeading
           description="Run the extraction, monitor progress, and download the ZIP when it is ready."
           title="Extract frames"
@@ -249,20 +266,23 @@ function ActiveStepCard({
           />
           <DownloadPanel
             archiveInfo={motionSplit.archiveInfo}
-            errorMessage={motionSplit.errorMessage}
           />
         </div>
-        <StepFooter
-          actionLabel={hasArchive ? 'Continue' : 'Stay here until ready'}
-          disabled={!hasArchive}
-          onAction={handleAdvance}
-        />
+        <div className="mt-6 border-t border-white/8 pt-5">
+          <button
+            className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-black/15 px-5 text-sm font-medium text-slate-200 transition hover:border-white/20 hover:bg-white/5"
+            onClick={handleRetreat}
+            type="button"
+          >
+            Previous
+          </button>
+        </div>
       </section>
     )
   }
 
   return (
-    <section className="p-6">
+    <section className="p-6 pt-8">
       <StepHeading
         description="MotionSplit is free and open source. If it helped, give the repo a star."
         title="Support open source"
@@ -284,10 +304,7 @@ function ActiveStepCard({
         </div>
       </div>
       <div className="mt-5">
-        <DownloadPanel
-          archiveInfo={motionSplit.archiveInfo}
-          errorMessage={motionSplit.errorMessage}
-        />
+        <DownloadPanel archiveInfo={motionSplit.archiveInfo} />
       </div>
     </section>
   )
@@ -311,16 +328,36 @@ function StepHeading({
 function StepFooter({
   actionLabel,
   disabled,
+  helperText,
   onAction,
+  onBack,
 }: {
   actionLabel: string
   disabled: boolean
+  helperText?: string
   onAction: () => void
+  onBack?: () => void
 }) {
   return (
-    <div className="mt-6 flex justify-end border-t border-white/8 pt-5">
+    <div className="mt-6 flex items-center justify-between gap-3 border-t border-white/8 pt-5">
+      <div className="min-h-11">
+        {onBack ? (
+          <button
+            className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-black/15 px-5 text-sm font-medium text-slate-200 transition hover:border-white/20 hover:bg-white/5"
+            onClick={onBack}
+            type="button"
+          >
+            Previous
+          </button>
+        ) : helperText ? (
+          <div className="flex min-h-11 items-center text-sm text-slate-500">
+            {helperText}
+          </div>
+        ) : null}
+      </div>
+
       <button
-        className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[linear-gradient(90deg,#6ca2ff_0%,#2e67ee_100%)] px-6 text-sm font-medium text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
+        className="inline-flex min-h-11 min-w-[220px] items-center justify-center rounded-2xl border border-[#8bb4ff]/45 bg-[linear-gradient(180deg,#7cabff_0%,#4f84f3_58%,#305fd8_100%)] px-6 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(29,76,188,0.35),inset_0_1px_0_rgba(255,255,255,0.18)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-slate-800 disabled:text-slate-500 disabled:shadow-none"
         disabled={disabled}
         onClick={onAction}
         type="button"
@@ -398,4 +435,12 @@ function nextStep(step: StepId): StepId {
   }
 
   return (step + 1) as StepId
+}
+
+function previousStep(step: StepId): StepId {
+  if (step === 1) {
+    return 1
+  }
+
+  return (step - 1) as StepId
 }

@@ -27,7 +27,7 @@ export function ExtractionControls({
   videoDuration,
 }: ExtractionControlsProps) {
   return (
-    <section className="rounded-[28px] border border-white/8 bg-black/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+    <section className="rounded-[28px] border border-white/8 bg-black/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] lg:p-4">
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-white">Extraction settings</h2>
@@ -44,7 +44,7 @@ export function ExtractionControls({
         </button>
       </div>
 
-      <div className="mt-5 grid gap-5">
+      <div className="mt-4 grid gap-4 lg:gap-3">
         <div className="grid gap-3 lg:grid-cols-2">
           <ModeCard
             active={settings.mode === 'every-frame'}
@@ -64,7 +64,7 @@ export function ExtractionControls({
           />
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-3 lg:grid-cols-2">
           <label className="grid gap-2 text-sm text-slate-300">
             Target FPS
             <select
@@ -105,7 +105,7 @@ export function ExtractionControls({
           </label>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-3 lg:grid-cols-2">
           <label className="grid gap-2 text-sm text-slate-300">
             Start Time (s)
             <input
@@ -149,7 +149,7 @@ export function ExtractionControls({
           </label>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-3 lg:grid-cols-2">
           <fieldset className="grid gap-2 text-sm text-slate-300">
             <legend className="pb-1">Padding Digits</legend>
             <div className="grid grid-cols-3 gap-2">
@@ -173,29 +173,35 @@ export function ExtractionControls({
             </div>
           </fieldset>
 
-          <div className="grid gap-2 text-sm text-slate-300">
-            <div className="flex items-center justify-between">
-              <span>JPG Quality</span>
-              <span className="text-slate-500">{settings.quality}%</span>
+          {settings.format === 'jpg' ? (
+            <div className="grid gap-2 text-sm text-slate-300 lg:self-end">
+              <div className="flex items-center justify-between">
+                <span>JPG Quality</span>
+                <span className="text-slate-500">{settings.quality}%</span>
+              </div>
+              <input
+                className="accent-[#5a87ff]"
+                disabled={disabled}
+                max={100}
+                min={40}
+                onChange={(event) =>
+                  setSettings((current) => ({
+                    ...current,
+                    quality: Number(event.target.value),
+                  }))
+                }
+                type="range"
+                value={settings.quality}
+              />
             </div>
-            <input
-              className="accent-[#5a87ff]"
-              disabled={disabled || settings.format !== 'jpg'}
-              max={100}
-              min={40}
-              onChange={(event) =>
-                setSettings((current) => ({
-                  ...current,
-                  quality: Number(event.target.value),
-                }))
-              }
-              type="range"
-              value={settings.quality}
-            />
-          </div>
+          ) : (
+            <div className="rounded-2xl border border-white/10 bg-[#0a101d] px-4 py-3 text-sm text-slate-500 lg:self-end">
+              JPG quality appears only when output format is set to JPG.
+            </div>
+          )}
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-[#0a101d] p-4">
+        <div className="rounded-2xl border border-white/10 bg-[#0a101d] p-4 lg:p-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="text-xs uppercase tracking-[0.2em] text-slate-500">
@@ -238,7 +244,7 @@ type ModeCardProps = {
 function ModeCard({ active, description, onClick, title }: ModeCardProps) {
   return (
     <button
-      className={`rounded-2xl border p-4 text-left transition ${
+      className={`rounded-2xl border p-4 text-left transition lg:min-h-[116px] lg:p-3 ${
         active
           ? 'border-[#5a87ff] bg-[#12203f]'
           : 'border-white/10 bg-[#0a101d] hover:border-white/20 hover:bg-white/6'
@@ -247,7 +253,7 @@ function ModeCard({ active, description, onClick, title }: ModeCardProps) {
       type="button"
     >
       <div className="text-sm font-medium text-white">{title}</div>
-      <div className="mt-2 text-sm leading-6 text-slate-400">{description}</div>
+      <div className="mt-2 text-sm leading-6 text-slate-400 lg:leading-5">{description}</div>
     </button>
   )
 }
