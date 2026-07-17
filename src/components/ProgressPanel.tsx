@@ -14,7 +14,8 @@ export function ProgressPanel({
   onCancel,
   statusText,
 }: ProgressPanelProps) {
-  const busy = phase === 'loading' || phase === 'extracting'
+  const busy = ['loading', 'extracting', 'packaging', 'cancelling'].includes(phase)
+  const cancellable = ['loading', 'extracting', 'packaging'].includes(phase)
 
   return (
     <section className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.02))] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.24)]">
@@ -24,20 +25,24 @@ export function ProgressPanel({
           <p className="mt-1 text-sm text-slate-400">{statusText}</p>
         </div>
 
-        {phase === 'extracting' ? (
+        {cancellable ? (
           <button
             className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm text-red-200 transition hover:bg-red-500/20"
             onClick={onCancel}
             type="button"
           >
-            Cancel
+            {phase === 'packaging' ? 'Cancel ZIP' : 'Cancel'}
           </button>
         ) : null}
       </div>
 
       <div className="mt-5 overflow-hidden rounded-full bg-white/8">
         <div
+          aria-valuemax={100}
+          aria-valuemin={0}
+          aria-valuenow={Math.min(progress.percent, 100)}
           className="h-3 rounded-full bg-[linear-gradient(90deg,#6ca2ff_0%,#2e67ee_100%)] transition-[width] duration-300"
+          role="progressbar"
           style={{ width: `${Math.min(progress.percent, 100)}%` }}
         />
       </div>

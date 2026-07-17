@@ -15,13 +15,19 @@ import { parseFrameRate } from '../utils/video'
 import { readVideoMetadata } from '../utils/video'
 import { createFrameArchive, finalizeFrameArchive } from '../zip/frameArchive'
 import {
+  MAX_ARCHIVE_BYTES,
+  MAX_OUTPUT_FRAMES,
+  MAX_OUTPUT_PIXELS,
   MAX_UPLOAD_BYTES,
   MAX_VIDEO_DURATION_SECONDS,
 } from '../utils/limits'
 
 const INPUT_NAME = 'input-video'
 const PREVIEW_LIMIT = 18
-const CHUNK_SECONDS = 2
+const CHUNK_SECONDS = 1
+const FFMPEG_LOAD_TIMEOUT_MS = 45_000
+const FFMPEG_COMMAND_TIMEOUT_MS = 120_000
+const FFPROBE_TIMEOUT_MS = 30_000
 const INITIAL_PROGRESS: ProgressState = {
   currentFrame: 0,
   etaSeconds: null,
@@ -47,6 +53,8 @@ export function useMotionSplit() {
   const archiveUrlRef = useRef<string | null>(null)
   const runStartRef = useRef<number>(0)
   const cancelledRef = useRef(false)
+  const activeRunRef = useRef(false)
+  const selectionIdRef = useRef(0)
 
   useEffect(() => {
     saveSettings(settings)
@@ -54,6 +62,8 @@ export function useMotionSplit() {
 
   useEffect(() => {
     return () => {
+      cancelledRef.current = true
+      selectionIdRef.current += 1
       revokePreviewUrls(previewUrlsRef.current)
       if (archiveUrlRef.current) {
         URL.revokeObjectURL(archiveUrlRef.current)
@@ -62,15 +72,30 @@ export function useMotionSplit() {
     }
   }, [])
 
+  const isBusy = [
+    'inspecting',
+    'loading',
+    'extracting',
+    'packaging',
+    'cancelling',
+  ].includes(phase)
+  const isProcessing = ['loading', 'extracting', 'packaging', 'cancelling'].includes(phase)
+
   const canExtract = useMemo(() => {
-    if (!videoFile || !metadata) {
+    if (!videoFile || !metadata || isBusy) {
       return false
     }
 
     return settings.endTime > settings.startTime
-  }, [metadata, settings.endTime, settings.startTime, videoFile])
+  }, [isBusy, metadata, settings.endTime, settings.startTime, videoFile])
 
   async function handleFileSelection(file: File) {
+    if (activeRunRef.current) {
+      return
+    }
+
+    const selectionId = ++selectionIdRef.current
+
     if (!isSupportedFile(file)) {
       rejectFile('Unsupported file type. Use MP4, MOV, or WebM.')
       return
@@ -87,13 +112,27 @@ export function useMotionSplit() {
     clearPreviews()
     cancelledRef.current = false
     setErrorMessage(null)
-    setPhase('loading')
+    setPhase('inspecting')
     setStatusText('Reading video metadata...')
     setProgress(INITIAL_PROGRESS)
     setVideoFile(file)
 
     try {
       const parsedMetadata = await readVideoMetadata(file)
+
+      if (selectionId !== selectionIdRef.current) {
+        return
+      }
+
+      if (
+        !Number.isFinite(parsedMetadata.duration) ||
+        parsedMetadata.duration <= 0 ||
+        parsedMetadata.width <= 0 ||
+        parsedMetadata.height <= 0
+      ) {
+        rejectFile('The browser could not find a valid video track in this file.')
+        return
+      }
 
       if (parsedMetadata.duration > MAX_VIDEO_DURATION_SECONDS) {
         rejectFile(
@@ -111,7 +150,12 @@ export function useMotionSplit() {
       setStatusText('Metadata ready. FFmpeg will load on first extraction.')
       setPhase('ready')
     } catch (error) {
+      if (selectionId !== selectionIdRef.current) {
+        return
+      }
+
       setPhase('error')
+      setStatusText('Select a different source file to continue.')
       setErrorMessage(
         error instanceof Error ? error.message : 'Unable to inspect the selected video.',
       )
@@ -119,11 +163,15 @@ export function useMotionSplit() {
   }
 
   async function startExtraction() {
-    if (!videoFile || !metadata) {
+    if (!videoFile || !metadata || activeRunRef.current) {
       return
     }
 
+    activeRunRef.current = true
     cancelledRef.current = false
+    const sourceFile = videoFile
+    const sourceMetadata = metadata
+    const runSettings = settings
     clearArchive()
     clearPreviews()
     setErrorMessage(null)
@@ -131,63 +179,78 @@ export function useMotionSplit() {
     setStatusText('Loading FFmpeg...')
     setProgress(INITIAL_PROGRESS)
 
-    const ffmpeg = await getFFmpeg()
-    setFfmpegReady(true)
-    setPhase('extracting')
-    setStatusText('Extracting frames...')
-    runStartRef.current = performance.now()
-
-    await ffmpeg.writeFile(INPUT_NAME, new Uint8Array(await videoFile.arrayBuffer()))
-
-    const sourceFrameRate =
-      settings.mode === 'every-frame'
-        ? await resolveSourceFrameRate(ffmpeg, metadata, setMetadata)
-        : metadata.frameRate
-
-    const zip = createFrameArchive()
-    const fps =
-      settings.mode === 'every-frame' ? sourceFrameRate ?? 30 : settings.fps
-    const totalFrames = Math.max(
-      1,
-      Math.round((settings.endTime - settings.startTime) * fps),
-    )
-    const filterArgs =
-      settings.mode === 'every-frame' ? [] : ['-vf', `fps=${settings.fps}`]
-    const codecArgs =
-      settings.format === 'png'
-        ? ['-c:v', 'png']
-        : ['-q:v', mapJpegQuality(settings.quality).toString()]
-
-    setProgress((current) => ({ ...current, totalFrames }))
+    let ffmpeg: Awaited<ReturnType<typeof getFFmpeg>> | null = null
+    let stage: 'loading' | 'extracting' | 'packaging' = 'loading'
 
     try {
+      ffmpeg = await getFFmpeg(AbortSignal.timeout(FFMPEG_LOAD_TIMEOUT_MS))
+      throwIfCancelled(cancelledRef.current)
+      setFfmpegReady(true)
+      setStatusText('Preparing the source video...')
+
+      const sourceBytes = new Uint8Array(await sourceFile.arrayBuffer())
+      throwIfCancelled(cancelledRef.current)
+      await ffmpeg.writeFile(INPUT_NAME, sourceBytes)
+      throwIfCancelled(cancelledRef.current)
+
+      stage = 'extracting'
+      setPhase('extracting')
+      setStatusText('Extracting frames...')
+      runStartRef.current = performance.now()
+
+      const sourceFrameRate =
+        runSettings.mode === 'every-frame'
+          ? await resolveSourceFrameRate(ffmpeg, sourceMetadata, setMetadata)
+          : sourceMetadata.frameRate
+      throwIfCancelled(cancelledRef.current)
+
+      const zip = createFrameArchive()
+      const fps =
+        runSettings.mode === 'every-frame' ? sourceFrameRate ?? 60 : runSettings.fps
+      const totalFrames = Math.max(
+        1,
+        Math.round((runSettings.endTime - runSettings.startTime) * fps),
+      )
+      assertSafeExtraction(totalFrames, sourceMetadata)
+
+      const filterArgs =
+        runSettings.mode === 'every-frame' ? [] : ['-vf', `fps=${runSettings.fps}`]
+      const codecArgs =
+        runSettings.format === 'png'
+          ? ['-c:v', 'png']
+          : ['-q:v', mapJpegQuality(runSettings.quality).toString()]
+
+      setProgress((current) => ({ ...current, totalFrames }))
+
       let globalFrame = 1
       let outputBytes = 0
 
       for (
-        let chunkStart = settings.startTime;
-        chunkStart < settings.endTime;
+        let chunkStart = runSettings.startTime;
+        chunkStart < runSettings.endTime;
         chunkStart += CHUNK_SECONDS
       ) {
-        if (cancelledRef.current) {
-          throw new Error('Extraction cancelled.')
-        }
+        throwIfCancelled(cancelledRef.current)
 
-        const chunkDuration = Math.min(CHUNK_SECONDS, settings.endTime - chunkStart)
+        const chunkDuration = Math.min(CHUNK_SECONDS, runSettings.endTime - chunkStart)
         const chunkPrefix = `chunk-${globalFrame}`
-        const outputPattern = `${chunkPrefix}-%05d.${settings.format}`
+        const outputPattern = `${chunkPrefix}-%05d.${runSettings.format}`
         let lastChunkProgress = 0
 
         const onProgress = ({ progress: chunkProgress }: { progress: number }) => {
+          if (cancelledRef.current) {
+            return
+          }
+
           lastChunkProgress = chunkProgress
           const processedSeconds =
-            chunkStart - settings.startTime + chunkDuration * chunkProgress
+            chunkStart - runSettings.startTime + chunkDuration * chunkProgress
           const completedFrames = Math.min(
             totalFrames,
             Math.round(processedSeconds * fps),
           )
           const percent =
-            (processedSeconds / (settings.endTime - settings.startTime)) * 100
+            (processedSeconds / (runSettings.endTime - runSettings.startTime)) * 100
           const elapsedSeconds = (performance.now() - runStartRef.current) / 1000
           const etaSeconds =
             percent > 0 ? elapsedSeconds * ((100 - percent) / percent) : null
@@ -208,8 +271,9 @@ export function useMotionSplit() {
 
         ffmpeg.on('progress', onProgress)
 
+        let exitCode: number
         try {
-          await ffmpeg.exec([
+          exitCode = await ffmpeg.exec([
             '-ss',
             chunkStart.toFixed(3),
             '-t',
@@ -219,23 +283,39 @@ export function useMotionSplit() {
             ...filterArgs,
             ...codecArgs,
             outputPattern,
-          ])
+          ], FFMPEG_COMMAND_TIMEOUT_MS)
         } finally {
           ffmpeg.off('progress', onProgress)
         }
 
-        const files = await listChunkFiles(ffmpeg, chunkPrefix, settings.format)
+        throwIfCancelled(cancelledRef.current)
+        if (exitCode !== 0) {
+          throw new Error('FFmpeg could not decode this part of the video.')
+        }
+
+        const files = await listChunkFiles(ffmpeg, chunkPrefix, runSettings.format)
+        if (!files.length) {
+          throw new Error('FFmpeg produced no frames for the selected range.')
+        }
 
         for (const fileName of files) {
+          throwIfCancelled(cancelledRef.current)
           const fileData = await ffmpeg.readFile(fileName)
           const bytes = normalizeFileData(fileData)
           const blob = new Blob([bytes], {
-            type: settings.format === 'png' ? 'image/png' : 'image/jpeg',
+            type: runSettings.format === 'png' ? 'image/png' : 'image/jpeg',
           })
-          const outputName = buildFrameName(globalFrame, settings.padding, settings.format)
+          const outputName = buildFrameName(
+            globalFrame,
+            runSettings.padding,
+            runSettings.format,
+          )
 
           zip.file(outputName, blob)
           outputBytes += blob.size
+          if (globalFrame > MAX_OUTPUT_FRAMES || outputBytes > MAX_ARCHIVE_BYTES) {
+            throw new Error('The generated frames exceeded the browser safety limit.')
+          }
 
           if (previewUrlsRef.current.length < PREVIEW_LIMIT) {
             const previewUrl = URL.createObjectURL(blob)
@@ -252,31 +332,47 @@ export function useMotionSplit() {
           globalFrame += 1
         }
 
+        const projectedArchiveBytes = Math.round(
+          (outputBytes / Math.max(globalFrame - 1, 1)) * totalFrames,
+        )
+        if (projectedArchiveBytes > MAX_ARCHIVE_BYTES) {
+          throw new Error(
+            `The estimated ZIP is larger than the ${Math.round(MAX_ARCHIVE_BYTES / 1024 / 1024)} MB browser safety limit. Use JPG, lower FPS, or a shorter range.`,
+          )
+        }
+
         setProgress((current) => ({
           ...current,
           currentFrame: globalFrame - 1,
           estimatedZipBytes:
             globalFrame > 1
-              ? Math.round((outputBytes / (globalFrame - 1)) * totalFrames)
+              ? projectedArchiveBytes
               : current.estimatedZipBytes,
           extractedFrames: globalFrame - 1,
           percent:
-            ((chunkStart - settings.startTime + chunkDuration * Math.max(lastChunkProgress, 1)) /
-              (settings.endTime - settings.startTime)) *
+            ((chunkStart - runSettings.startTime + chunkDuration * Math.max(lastChunkProgress, 1)) /
+              (runSettings.endTime - runSettings.startTime)) *
             100,
-          processedSeconds: chunkStart - settings.startTime + chunkDuration,
+          processedSeconds: chunkStart - runSettings.startTime + chunkDuration,
         }))
       }
 
+      stage = 'packaging'
+      setPhase('packaging')
       setStatusText('Creating ZIP archive...')
-      const zipBlob = await finalizeFrameArchive(zip)
+      const zipBlob = await finalizeFrameArchive(zip, () => cancelledRef.current)
+      throwIfCancelled(cancelledRef.current)
+      if (zipBlob.size > MAX_ARCHIVE_BYTES) {
+        throw new Error('The ZIP exceeded the browser safety limit.')
+      }
+
       const downloadUrl = URL.createObjectURL(zipBlob)
       archiveUrlRef.current = downloadUrl
 
       setArchiveInfo({
         downloadUrl,
-        fileName: `${sanitizeFileName(metadata.name)}-frames.zip`,
-        format: settings.format,
+        fileName: `${sanitizeFileName(sourceMetadata.name)}-frames.zip`,
+        format: runSettings.format,
         frameCount: globalFrame - 1,
         sizeBytes: zipBlob.size,
       })
@@ -287,38 +383,54 @@ export function useMotionSplit() {
         estimatedZipBytes: zipBlob.size,
         extractedFrames: globalFrame - 1,
         percent: 100,
+        totalFrames: globalFrame - 1,
       }))
       setStatusText('Frames ready for download.')
       setPhase('done')
     } catch (error) {
-      if (archiveUrlRef.current) {
-        URL.revokeObjectURL(archiveUrlRef.current)
-        archiveUrlRef.current = null
-      }
+      dropFFmpeg()
+      setFfmpegReady(false)
+      clearArchive()
+      clearPreviews()
 
-      setPhase(cancelledRef.current ? 'ready' : 'error')
-      setStatusText(
-        cancelledRef.current ? 'Extraction cancelled.' : 'Extraction failed.',
-      )
-      setErrorMessage(error instanceof Error ? error.message : 'Frame extraction failed.')
+      if (cancelledRef.current) {
+        setPhase('ready')
+        setStatusText('Extraction cancelled. Your source is ready to retry.')
+        setProgress(INITIAL_PROGRESS)
+        setErrorMessage(null)
+      } else {
+        setPhase('error')
+        setStatusText('Extraction failed. Fix the issue below and retry.')
+        setErrorMessage(formatExtractionError(error, stage))
+      }
     } finally {
-      ffmpeg.deleteFile(INPUT_NAME).catch(() => undefined)
+      activeRunRef.current = false
+      ffmpeg?.deleteFile(INPUT_NAME).catch(() => undefined)
     }
   }
 
   function cancelExtraction() {
-    if (phase !== 'extracting') {
+    if (!activeRunRef.current || cancelledRef.current) {
       return
     }
 
     cancelledRef.current = true
+    clearArchive()
+    clearPreviews()
     dropFFmpeg()
     setFfmpegReady(false)
+    setPhase('cancelling')
     setStatusText('Cancelling extraction...')
   }
 
   function resetAll() {
+    if (activeRunRef.current) {
+      return
+    }
+
+    selectionIdRef.current += 1
     cancelledRef.current = false
+    dropFFmpeg()
     clearArchive()
     clearPreviews()
     setVideoFile(null)
@@ -333,7 +445,11 @@ export function useMotionSplit() {
 
   async function copyNamingPattern() {
     const sample = buildFrameName(1, settings.padding, settings.format)
-    await navigator.clipboard.writeText(sample)
+    try {
+      await navigator.clipboard.writeText(sample)
+    } catch {
+      setErrorMessage('The browser blocked clipboard access. Copy the pattern manually.')
+    }
   }
 
   return {
@@ -344,6 +460,8 @@ export function useMotionSplit() {
     errorMessage,
     ffmpegReady,
     handleFileSelection,
+    isBusy,
+    isProcessing,
     metadata,
     phase,
     previewFrames,
@@ -436,7 +554,7 @@ async function resolveSourceFrameRate(
   const probeOutputName = `${INPUT_NAME}.fps.txt`
 
   try {
-    await ffmpeg.ffprobe([
+    const exitCode = await ffmpeg.ffprobe([
       '-v',
       'error',
       '-select_streams',
@@ -448,7 +566,11 @@ async function resolveSourceFrameRate(
       INPUT_NAME,
       '-o',
       probeOutputName,
-    ])
+    ], FFPROBE_TIMEOUT_MS)
+
+    if (exitCode !== 0) {
+      return null
+    }
 
     const probeText = await ffmpeg.readFile(probeOutputName, 'utf8')
     const parsedFrameRate = parseFrameRate(String(probeText))
@@ -464,4 +586,47 @@ async function resolveSourceFrameRate(
   } finally {
     ffmpeg.deleteFile(probeOutputName).catch(() => undefined)
   }
+}
+
+function throwIfCancelled(cancelled: boolean) {
+  if (cancelled) {
+    throw new Error('Extraction cancelled.')
+  }
+}
+
+function assertSafeExtraction(totalFrames: number, metadata: VideoMetadata) {
+  if (totalFrames > MAX_OUTPUT_FRAMES) {
+    throw new Error(
+      `This extraction would create about ${totalFrames.toLocaleString()} frames. Keep it under ${MAX_OUTPUT_FRAMES.toLocaleString()} by lowering FPS or shortening the range.`,
+    )
+  }
+
+  if (totalFrames * metadata.width * metadata.height > MAX_OUTPUT_PIXELS) {
+    throw new Error(
+      'This resolution and frame count are too large for safe in-browser processing. Lower FPS, shorten the range, or resize the video.',
+    )
+  }
+}
+
+function formatExtractionError(
+  error: unknown,
+  stage: 'loading' | 'extracting' | 'packaging',
+) {
+  const message = error instanceof Error ? error.message : ''
+
+  if (stage === 'loading') {
+    return navigator.onLine
+      ? 'MotionSplit could not start FFmpeg. Check your connection and available browser memory, then retry.'
+      : 'FFmpeg is not available in the offline cache yet. Reconnect once, reload MotionSplit, then retry.'
+  }
+
+  if (/memory|allocation|out of bounds|too large|safety limit/i.test(message)) {
+    return message || 'The browser ran out of memory. Use a shorter range or lower FPS.'
+  }
+
+  if (stage === 'packaging') {
+    return message || 'MotionSplit could not create the ZIP. Use a shorter range and retry.'
+  }
+
+  return message || 'Frame extraction failed. The video may use an unsupported codec.'
 }

@@ -31,6 +31,7 @@ export function ExtractionControls({
       <div className="flex justify-end">
         <button
           className="rounded-2xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:border-white/20 hover:bg-white/5"
+          disabled={disabled}
           onClick={onReset}
           type="button"
         >
@@ -43,6 +44,7 @@ export function ExtractionControls({
           <ModeCard
             active={settings.mode === 'every-frame'}
             description="Source cadence."
+            disabled={disabled}
             onClick={() =>
               setSettings((current) => ({ ...current, mode: 'every-frame' }))
             }
@@ -51,6 +53,7 @@ export function ExtractionControls({
           <ModeCard
             active={settings.mode === 'custom-fps'}
             description="Lighter output."
+            disabled={disabled}
             onClick={() =>
               setSettings((current) => ({ ...current, mode: 'custom-fps' }))
             }
@@ -203,6 +206,7 @@ export function ExtractionControls({
             </div>
             <button
               className="rounded-2xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:border-white/20 hover:bg-white/5"
+              disabled={disabled}
               onClick={onCopyPattern}
               type="button"
             >
@@ -225,11 +229,12 @@ export function ExtractionControls({
 type ModeCardProps = {
   active: boolean
   description: string
+  disabled: boolean
   onClick: () => void
   title: string
 }
 
-function ModeCard({ active, description, onClick, title }: ModeCardProps) {
+function ModeCard({ active, description, disabled, onClick, title }: ModeCardProps) {
   return (
     <button
       className={`rounded-2xl border p-3 text-left transition lg:min-h-[92px] ${
@@ -237,6 +242,7 @@ function ModeCard({ active, description, onClick, title }: ModeCardProps) {
           ? 'border-[#5a87ff] bg-[#12203f]'
           : 'border-white/10 bg-[#0a101d] hover:border-white/20 hover:bg-white/6'
       }`}
+      disabled={disabled}
       onClick={onClick}
       type="button"
     >

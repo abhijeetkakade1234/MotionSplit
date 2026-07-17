@@ -1,6 +1,15 @@
 export type ExtractionMode = 'every-frame' | 'custom-fps'
 export type OutputFormat = 'png' | 'jpg'
-export type Phase = 'idle' | 'loading' | 'ready' | 'extracting' | 'done' | 'error'
+export type Phase =
+  | 'idle'
+  | 'inspecting'
+  | 'loading'
+  | 'ready'
+  | 'extracting'
+  | 'packaging'
+  | 'cancelling'
+  | 'done'
+  | 'error'
 
 export type VideoMetadata = {
   duration: number

@@ -2,16 +2,26 @@ import type { VideoMetadata } from '../types'
 
 export async function readVideoMetadata(file: File): Promise<VideoMetadata> {
   const objectUrl = URL.createObjectURL(file)
+  const video = document.createElement('video')
 
   try {
-    const video = document.createElement('video')
     video.preload = 'metadata'
     video.muted = true
     video.src = objectUrl
 
     await new Promise<void>((resolve, reject) => {
-      video.onloadedmetadata = () => resolve()
-      video.onerror = () => reject(new Error('Could not read video metadata.'))
+      const timeoutId = window.setTimeout(() => {
+        reject(new Error('The browser took too long to read this video. Try another file.'))
+      }, 15_000)
+
+      video.onloadedmetadata = () => {
+        window.clearTimeout(timeoutId)
+        resolve()
+      }
+      video.onerror = () => {
+        window.clearTimeout(timeoutId)
+        reject(new Error('Could not read video metadata. The file may be damaged.'))
+      }
     })
 
     return {
@@ -22,6 +32,10 @@ export async function readVideoMetadata(file: File): Promise<VideoMetadata> {
       width: video.videoWidth,
     }
   } finally {
+    video.onloadedmetadata = null
+    video.onerror = null
+    video.removeAttribute('src')
+    video.load()
     URL.revokeObjectURL(objectUrl)
   }
 }
