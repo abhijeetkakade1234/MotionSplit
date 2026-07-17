@@ -327,13 +327,11 @@ export function LandingPage({ onEnterTool }: LandingPageProps) {
               </div>
             </div>
 
-            <a
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 self-start rounded-full border border-white/14 px-5 text-sm font-medium text-white transition hover:border-[#84b3ff]/60 hover:text-[#9fc4ff] active:translate-y-px lg:self-auto"
+            <AnimatedActionButton
               href="https://github.com/abhijeetkakade1234/MotionSplit"
-            >
-              Star on GitHub
-              <ArrowUpRight className="h-4 w-4" strokeWidth={1.5} />
-            </a>
+              label="Star on GitHub"
+              variant="github"
+            />
           </div>
         </div>
       </section>
@@ -371,7 +369,9 @@ export function LandingPage({ onEnterTool }: LandingPageProps) {
                 GitHub
               </a>
               <span>MIT License</span>
-              <span>2026 MotionSplit</span>
+              <a className="transition hover:text-[#08101f]" href="https://abhijeetkakade.in/">
+                Built by Abhijeet Kakade
+              </a>
             </div>
 
             <a className="text-[#08101f] transition hover:text-[#315fca]" href="#top">
