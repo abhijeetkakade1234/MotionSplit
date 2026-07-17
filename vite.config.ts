@@ -16,9 +16,9 @@ export default defineConfig({
       manifest: {
         name: 'MotionSplit',
         short_name: 'MotionSplit',
-        description: 'Client-side video frame extraction for scroll sequences and animation workflows.',
-        theme_color: '#09090b',
-        background_color: '#09090b',
+        description: 'Free, private video frame extraction to PNG or JPG sequences and ZIP files.',
+        theme_color: '#050816',
+        background_color: '#050816',
         display: 'standalone',
         start_url: '/',
         icons: [
