@@ -12,7 +12,6 @@ import {
 } from 'lucide-react'
 import { AnimatedActionButton } from './AnimatedActionButton'
 import Grainient from './Grainient'
-import { SparkLogo } from './SparkLogo'
 import { formatBytes, formatDuration } from '../utils/format'
 import {
   MAX_UPLOAD_BYTES,
@@ -103,13 +102,12 @@ export function LandingPage({ onEnterTool }: LandingPageProps) {
         <div className="relative mx-auto max-w-7xl px-4 pb-24 pt-5 sm:px-6 lg:px-8">
           <nav className="flex items-center justify-between gap-5 rounded-[26px] border border-white/10 bg-white/[0.03] px-4 py-3 backdrop-blur md:px-6">
             <div className="flex items-center gap-3 text-lg font-semibold tracking-tight text-white">
-              <span className="relative inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,#3b82f6_0%,#dbeafe_100%)]">
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-0 opacity-20 [background-image:radial-gradient(rgba(255,255,255,0.7)_0.6px,transparent_0.8px)] [background-position:0_0,3px_3px] [background-size:6px_6px] mix-blend-soft-light"
-                />
-                <SparkLogo className="relative h-4.5 w-4.5" />
-              </span>
+              <img
+                alt=""
+                aria-hidden="true"
+                className="h-9 w-9 rounded-2xl border border-white/10"
+                src="/pwa-icon.svg"
+              />
               MotionSplit
             </div>
 
@@ -129,13 +127,12 @@ export function LandingPage({ onEnterTool }: LandingPageProps) {
           </nav>
 
           <div className="mx-auto max-w-4xl pb-12 pt-24 text-center" data-hero-copy id="top">
-            <div className="relative mx-auto inline-flex h-20 w-20 items-center justify-center overflow-hidden rounded-[28px] border border-white/12 bg-[linear-gradient(180deg,#3b82f6_0%,#dbeafe_100%)] text-xl text-white shadow-[0_14px_40px_rgba(0,0,0,0.22)]">
-              <span
-                aria-hidden="true"
-                className="absolute inset-0 opacity-20 [background-image:radial-gradient(rgba(255,255,255,0.7)_0.8px,transparent_1px)] [background-position:0_0,4px_4px] [background-size:8px_8px] mix-blend-soft-light"
-              />
-              <SparkLogo className="relative h-10 w-10" />
-            </div>
+            <img
+              alt=""
+              aria-hidden="true"
+              className="mx-auto h-20 w-20 rounded-[28px] border border-white/12 shadow-[0_14px_40px_rgba(0,0,0,0.22)]"
+              src="/pwa-icon.svg"
+            />
 
             <h1 className="mx-auto mt-10 max-w-4xl text-[clamp(3.8rem,8vw,6.4rem)] font-semibold leading-[0.96] tracking-[-0.065em] text-white">
               MotionSplit
@@ -354,13 +351,12 @@ export function LandingPage({ onEnterTool }: LandingPageProps) {
 
           <footer className="flex flex-col gap-7 border-t border-slate-200 px-6 py-7 text-sm text-slate-600 sm:px-10 md:flex-row md:items-center md:justify-between lg:px-14">
             <div className="flex items-center gap-3 text-[#08101f]">
-              <span className="relative inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-[linear-gradient(180deg,#3b82f6_0%,#dbeafe_100%)]">
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-0 opacity-20 [background-image:radial-gradient(rgba(255,255,255,0.7)_0.6px,transparent_0.8px)] [background-position:0_0,3px_3px] [background-size:6px_6px] mix-blend-soft-light"
-                />
-                <SparkLogo className="relative h-4.5 w-4.5" />
-              </span>
+              <img
+                alt=""
+                aria-hidden="true"
+                className="h-9 w-9 rounded-2xl border border-slate-200"
+                src="/pwa-icon.svg"
+              />
               <span className="text-lg font-semibold">MotionSplit</span>
             </div>
 
