@@ -2,12 +2,13 @@ import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import {
+  ArrowRight,
   ArrowUpRight,
   CloudOff,
   Code2,
-  LockKeyhole,
-  ShieldCheck,
-  UserRoundX,
+  FileArchive,
+  FileVideoCamera,
+  MonitorCog,
 } from 'lucide-react'
 import { AnimatedActionButton } from './AnimatedActionButton'
 import Grainient from './Grainient'
@@ -44,29 +45,6 @@ const workflowShots = [
     image: '/landing/tool-export.png',
     step: '03',
     title: 'Export one ZIP',
-  },
-] as const
-
-const trustItems = [
-  {
-    body: 'The browser handles the work on your machine.',
-    icon: ShieldCheck,
-    title: 'Client-side only',
-  },
-  {
-    body: 'Your source file never leaves your device.',
-    icon: CloudOff,
-    title: 'No uploads',
-  },
-  {
-    body: 'Open the tool and use it. No identity required.',
-    icon: UserRoundX,
-    title: 'No accounts',
-  },
-  {
-    body: 'We do not collect or store usage data.',
-    icon: LockKeyhole,
-    title: 'No tracking',
   },
 ] as const
 
@@ -242,112 +220,143 @@ export function LandingPage({ onEnterTool }: LandingPageProps) {
         <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(132,179,255,0.55),transparent)]" />
         <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-28 lg:px-8 lg:py-32">
           <div className="max-w-3xl" data-reveal-card>
-            <LockKeyhole className="h-8 w-8 text-[#84b3ff]" strokeWidth={1.5} />
-            <h2 className="mt-8 text-4xl font-semibold leading-[1.02] tracking-[-0.055em] text-white sm:text-6xl">
-              Your video never leaves the tab.
+            <h2 className="text-4xl font-semibold leading-[1.02] tracking-[-0.055em] text-white sm:text-6xl">
+              Your video stays on your device.
             </h2>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-              MotionSplit does the full job in your browser. No transfer, remote queue, or account sits between your clip and the ZIP.
+              MotionSplit reads the file, extracts frames, and builds the ZIP in your browser. Nothing is sent to a server.
             </p>
           </div>
 
           <div
-            className="mt-16 grid border-y border-white/10 sm:grid-cols-2 lg:mt-20 lg:grid-cols-4"
+            className="mt-16 grid items-center gap-0 border-y border-white/10 py-8 sm:py-10 lg:mt-20 lg:grid-cols-[1fr_64px_1.18fr_64px_1fr] lg:py-12"
             data-reveal-card
           >
-            {trustItems.map((item, index) => {
-              const Icon = item.icon
+            <article className="px-2 py-7 sm:px-8 lg:py-8">
+              <FileVideoCamera className="h-7 w-7 text-[#84b3ff]" strokeWidth={1.5} />
+              <h3 className="mt-7 text-xl font-semibold tracking-[-0.025em] text-white">
+                Video file
+              </h3>
+              <p className="mt-3 max-w-52 text-sm leading-6 text-slate-400">
+                Selected directly from your device.
+              </p>
+            </article>
 
-              return (
-                <article
-                  className={`py-8 sm:px-7 lg:min-h-56 lg:px-8 lg:py-9 ${index > 0 ? 'border-t border-white/10 sm:border-t-0 sm:[&:nth-child(even)]:border-l lg:border-l' : ''} ${index > 1 ? 'sm:border-t' : ''}`}
-                  key={item.title}
-                >
-                  <Icon className="h-6 w-6 text-[#84b3ff]" strokeWidth={1.5} />
-                  <h3 className="mt-8 text-xl font-semibold tracking-[-0.025em] text-white">
-                    {item.title}
-                  </h3>
-                  <p className="mt-3 max-w-56 text-sm leading-6 text-slate-400">{item.body}</p>
-                </article>
-              )
-            })}
+            <div className="flex h-12 items-center justify-center text-[#84b3ff] lg:h-auto" aria-hidden="true">
+              <ArrowRight className="h-5 w-5 rotate-90 lg:rotate-0" strokeWidth={1.5} />
+            </div>
+
+            <article className="relative overflow-hidden rounded-[30px] border border-[#84b3ff]/30 bg-[linear-gradient(180deg,rgba(41,85,171,0.28),rgba(12,24,52,0.72))] px-7 py-9 shadow-[0_24px_70px_rgba(4,11,30,0.38)] sm:px-9 sm:py-10">
+              <div className="absolute inset-x-10 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(167,202,255,0.8),transparent)]" />
+              <MonitorCog className="h-8 w-8 text-[#9fc4ff]" strokeWidth={1.5} />
+              <div className="mt-6 text-xs font-medium text-[#9fc4ff]">Inside this browser tab</div>
+              <h3 className="mt-3 text-2xl font-semibold tracking-[-0.035em] text-white">
+                Processed locally
+              </h3>
+              <p className="mt-3 max-w-64 text-sm leading-6 text-slate-300">
+                Frames are extracted and packaged without uploading the source.
+              </p>
+            </article>
+
+            <div className="flex h-12 items-center justify-center text-[#84b3ff] lg:h-auto" aria-hidden="true">
+              <ArrowRight className="h-5 w-5 rotate-90 lg:rotate-0" strokeWidth={1.5} />
+            </div>
+
+            <article className="px-2 py-7 sm:px-8 lg:py-8">
+              <FileArchive className="h-7 w-7 text-[#84b3ff]" strokeWidth={1.5} />
+              <h3 className="mt-7 text-xl font-semibold tracking-[-0.025em] text-white">
+                ZIP download
+              </h3>
+              <p className="mt-3 max-w-52 text-sm leading-6 text-slate-400">
+                Saved straight back to your device.
+              </p>
+            </article>
           </div>
-        </div>
-      </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-28 lg:px-8 lg:py-32" id="limits">
-        <div className="grid gap-14 lg:grid-cols-[0.82fr_1.18fr] lg:gap-24">
-          <div data-reveal-card>
-            <h2 className="max-w-md text-4xl font-semibold leading-[1.05] tracking-[-0.055em] text-white sm:text-5xl">
-              Clear limits. Better browser performance.
-            </h2>
-            <p className="mt-6 max-w-md text-lg leading-8 text-slate-300">
-              The caps prevent memory spikes and oversized ZIP builds from taking down the tab.
-            </p>
+          <div className="mt-8 flex items-center justify-center gap-3 text-sm text-slate-400" data-reveal-card>
+            <CloudOff className="h-5 w-5 text-[#84b3ff]" strokeWidth={1.5} />
+            <span>Your video never crosses a server boundary.</span>
           </div>
 
-          <div className="border-t border-white/12" data-reveal-card>
-            <div className="grid gap-5 border-b border-white/10 py-9 sm:grid-cols-[1fr_auto] sm:items-end sm:py-10">
-              <div className="text-base text-slate-400">Maximum video length</div>
-              <div className="text-5xl font-semibold tabular-nums tracking-[-0.055em] text-white sm:text-6xl">
+          <div
+            className="mt-20 grid border-t border-white/10 lg:grid-cols-[0.9fr_0.9fr_1.2fr]"
+            data-reveal-card
+            id="limits"
+          >
+            <div className="py-9 lg:pr-10">
+              <div className="text-sm text-slate-400">Video length</div>
+              <div className="mt-3 text-5xl font-semibold tabular-nums tracking-[-0.055em] text-white">
                 {formatDuration(MAX_VIDEO_DURATION_SECONDS)}
               </div>
+              <p className="mt-3 text-sm text-slate-500">Hard limit per clip</p>
             </div>
-            <div className="grid gap-5 border-b border-white/10 py-9 sm:grid-cols-[1fr_auto] sm:items-end sm:py-10">
-              <div className="text-base text-slate-400">Maximum file size</div>
-              <div className="text-5xl font-semibold tabular-nums tracking-[-0.055em] text-white sm:text-6xl">
+
+            <div className="border-t border-white/10 py-9 lg:border-l lg:border-t-0 lg:px-10">
+              <div className="text-sm text-slate-400">File size</div>
+              <div className="mt-3 text-5xl font-semibold tabular-nums tracking-[-0.055em] text-white">
                 {formatBytes(MAX_UPLOAD_BYTES)}
               </div>
+              <p className="mt-3 text-sm text-slate-500">Hard limit per clip</p>
             </div>
-            <p className="max-w-2xl pt-7 text-sm leading-7 text-slate-400">
-              For the fastest local turnaround, stay under {formatDuration(RECOMMENDED_VIDEO_DURATION_SECONDS)} and {formatBytes(RECOMMENDED_UPLOAD_BYTES)}.
-            </p>
-          </div>
-        </div>
 
-        <div
-          className="mt-24 flex flex-col gap-8 border-y border-white/10 py-9 sm:mt-28 sm:py-10 lg:flex-row lg:items-center lg:justify-between"
-          data-reveal-card
-          id="opensource"
-        >
-          <div className="flex max-w-2xl items-start gap-5">
-            <Code2 className="mt-1 h-7 w-7 shrink-0 text-[#84b3ff]" strokeWidth={1.5} />
-            <div>
-              <h2 className="text-2xl font-semibold tracking-[-0.035em] text-white sm:text-3xl">
-                Open source. Free for everyone.
-              </h2>
-              <p className="mt-3 text-base leading-7 text-slate-400">
-                Read the code, fork it, or improve it. There are no premium tiers hiding behind the tool.
+            <div className="border-t border-white/10 py-9 lg:border-l lg:border-t-0 lg:pl-10">
+              <div className="text-sm text-slate-400">Recommended working range</div>
+              <div className="mt-4 text-3xl font-semibold tabular-nums tracking-[-0.045em] text-white sm:text-4xl">
+                {formatDuration(RECOMMENDED_VIDEO_DURATION_SECONDS)} / {formatBytes(RECOMMENDED_UPLOAD_BYTES)}
+              </div>
+              <p className="mt-4 max-w-sm text-sm leading-6 text-slate-400">
+                Smaller clips finish faster and keep browser memory steady.
               </p>
             </div>
           </div>
 
-          <a
-            className="inline-flex min-h-11 shrink-0 items-center gap-2 self-start rounded-full border border-white/14 px-5 text-sm font-medium text-white transition hover:border-[#84b3ff]/60 hover:text-[#9fc4ff] active:translate-y-px lg:self-auto"
-            href="https://github.com/abhijeetkakade1234/MotionSplit"
+          <div
+            className="mt-16 flex flex-col gap-8 border-t border-white/10 pt-10 sm:mt-20 lg:flex-row lg:items-center lg:justify-between"
+            data-reveal-card
+            id="opensource"
           >
-            Star on GitHub
-            <ArrowUpRight className="h-4 w-4" strokeWidth={1.5} />
-          </a>
+            <div className="flex max-w-2xl items-start gap-5">
+              <Code2 className="mt-1 h-7 w-7 shrink-0 text-[#84b3ff]" strokeWidth={1.5} />
+              <div>
+                <h2 className="text-2xl font-semibold tracking-[-0.035em] text-white sm:text-3xl">
+                  Open source by default.
+                </h2>
+                <p className="mt-3 text-base leading-7 text-slate-400">
+                  Read the code, fork it, or improve it. MotionSplit stays free for everyone.
+                </p>
+              </div>
+            </div>
+
+            <a
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 self-start rounded-full border border-white/14 px-5 text-sm font-medium text-white transition hover:border-[#84b3ff]/60 hover:text-[#9fc4ff] active:translate-y-px lg:self-auto"
+              href="https://github.com/abhijeetkakade1234/MotionSplit"
+            >
+              Star on GitHub
+              <ArrowUpRight className="h-4 w-4" strokeWidth={1.5} />
+            </a>
+          </div>
         </div>
       </section>
 
-      <section className="border-t border-white/8 bg-[#070b18]">
-        <div className="mx-auto max-w-6xl px-4 pb-20 pt-16 sm:px-6 sm:pt-20 lg:px-8">
-          <div className="flex flex-col gap-9 lg:flex-row lg:items-center lg:justify-between">
-            <h2 className="max-w-2xl text-4xl font-semibold tracking-[-0.055em] text-white sm:text-5xl">
+      <section className="bg-[#050816] px-4 pb-4 pt-16 sm:px-6 sm:pb-6 sm:pt-20 lg:px-8">
+        <div className="mx-auto max-w-7xl overflow-hidden rounded-[30px] bg-white text-[#08101f] shadow-[0_30px_100px_rgba(19,54,120,0.24)] sm:rounded-[40px]">
+          <div className="grid gap-9 px-6 py-10 sm:px-10 sm:py-14 lg:grid-cols-[1fr_auto] lg:items-end lg:px-14 lg:py-16">
+            <h2 className="max-w-3xl text-4xl font-semibold leading-[1.02] tracking-[-0.055em] sm:text-6xl">
               Turn the clip into frames.
             </h2>
-            <AnimatedActionButton
-              label="Enter Tool"
+            <button
+              className="inline-flex min-h-12 items-center justify-center gap-2 self-start rounded-full bg-[#08101f] px-6 text-sm font-semibold text-white transition hover:bg-[#102044] active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#315fca] lg:self-auto"
               onClick={onEnterTool}
-              variant="upload"
-            />
+              type="button"
+            >
+              Enter Tool
+              <ArrowUpRight className="h-4 w-4" strokeWidth={1.5} />
+            </button>
           </div>
 
-          <footer className="mt-16 flex flex-col gap-7 border-t border-white/8 pt-8 text-sm text-slate-400 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-3 text-white">
-              <span className="relative inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(180deg,#3b82f6_0%,#dbeafe_100%)]">
+          <footer className="flex flex-col gap-7 border-t border-slate-200 px-6 py-7 text-sm text-slate-600 sm:px-10 md:flex-row md:items-center md:justify-between lg:px-14">
+            <div className="flex items-center gap-3 text-[#08101f]">
+              <span className="relative inline-flex h-9 w-9 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-[linear-gradient(180deg,#3b82f6_0%,#dbeafe_100%)]">
                 <span
                   aria-hidden="true"
                   className="absolute inset-0 opacity-20 [background-image:radial-gradient(rgba(255,255,255,0.7)_0.6px,transparent_0.8px)] [background-position:0_0,3px_3px] [background-size:6px_6px] mix-blend-soft-light"
@@ -357,15 +366,15 @@ export function LandingPage({ onEnterTool }: LandingPageProps) {
               <span className="text-lg font-semibold">MotionSplit</span>
             </div>
 
-            <div className="text-center">
-              <span>2026 MotionSplit</span>
-              <span className="mx-2 text-slate-600">/</span>
-              <span>Open source</span>
-              <span className="mx-2 text-slate-600">/</span>
+            <div className="flex flex-wrap gap-x-5 gap-y-2 md:justify-center">
+              <a className="transition hover:text-[#08101f]" href="https://github.com/abhijeetkakade1234/MotionSplit">
+                GitHub
+              </a>
               <span>MIT License</span>
+              <span>2026 MotionSplit</span>
             </div>
 
-            <a className="text-slate-300" href="#top">
+            <a className="text-[#08101f] transition hover:text-[#315fca]" href="#top">
               Back to top
             </a>
           </footer>
