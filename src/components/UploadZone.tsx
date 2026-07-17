@@ -15,7 +15,7 @@ export function UploadZone({
   const [dragActive, setDragActive] = useState(false)
 
   function takeFile(file: File | null) {
-    if (!file) {
+    if (!file || busy) {
       return
     }
 
@@ -30,6 +30,7 @@ export function UploadZone({
             ? 'border-[#5f8fff] bg-[#0d1832]'
             : 'border-[#4b79ef]/60 bg-[linear-gradient(180deg,rgba(14,22,42,0.92),rgba(8,13,26,0.98))] hover:border-[#7aa4ff] hover:bg-[#0d1730]'
         }`}
+        disabled={busy}
         onClick={() => inputRef.current?.click()}
         onDragLeave={() => setDragActive(false)}
         onDragOver={(event) => {

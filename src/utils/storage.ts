@@ -13,13 +13,12 @@ const DEFAULT_SETTINGS: ExtractionSettings = {
 }
 
 export function loadSettings() {
-  const raw = localStorage.getItem(STORAGE_KEY)
-
-  if (!raw) {
-    return DEFAULT_SETTINGS
-  }
-
   try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) {
+      return DEFAULT_SETTINGS
+    }
+
     return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } as ExtractionSettings
   } catch {
     return DEFAULT_SETTINGS
@@ -27,5 +26,9 @@ export function loadSettings() {
 }
 
 export function saveSettings(settings: ExtractionSettings) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
+  } catch {
+    // Storage can be disabled; settings persistence is optional.
+  }
 }

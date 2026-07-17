@@ -39,8 +39,8 @@ const STEP_COPY: Record<
 export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
   const motionSplit = useMotionSplit()
   const [currentStep, setCurrentStep] = useState<StepId>(1)
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
-  const extracting = motionSplit.phase === 'extracting'
+  const busy = motionSplit.isBusy
+  const processing = motionSplit.isProcessing
   const hasSource = Boolean(motionSplit.metadata)
   const hasArchive = Boolean(motionSplit.archiveInfo)
 
@@ -55,7 +55,7 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
         void motionSplit.startExtraction()
       }
 
-      if (isEscape && extracting) {
+      if (isEscape && processing) {
         event.preventDefault()
         motionSplit.cancelExtraction()
       }
@@ -63,7 +63,7 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [extracting, motionSplit])
+  }, [motionSplit, processing])
 
   useEffect(() => {
     if (!hasSource) {
@@ -76,16 +76,16 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
       return
     }
 
-    if (extracting || motionSplit.phase === 'done') {
+    if (processing || motionSplit.phase === 'done') {
       setCurrentStep(3)
       return
     }
 
     setCurrentStep(2)
-  }, [extracting, hasArchive, hasSource, motionSplit.phase])
+  }, [hasArchive, hasSource, motionSplit.phase, processing])
 
   useEffect(() => {
-    if (!extracting) {
+    if (!busy) {
       return
     }
 
@@ -96,23 +96,10 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
 
     window.addEventListener('beforeunload', onBeforeUnload)
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
-  }, [extracting])
-
-  useEffect(() => {
-    if (!motionSplit.errorMessage) {
-      return
-    }
-
-    setToastMessage(motionSplit.errorMessage)
-    const timeoutId = window.setTimeout(() => {
-      setToastMessage(null)
-    }, 3600)
-
-    return () => window.clearTimeout(timeoutId)
-  }, [motionSplit.errorMessage])
+  }, [busy])
 
   function handleBack() {
-    if (extracting && !window.confirm('Extraction is still running. Leave the tool?')) {
+    if (busy && !window.confirm('MotionSplit is still working. Leave the tool?')) {
       return
     }
 
@@ -120,7 +107,7 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
   }
 
   function goToStep(step: StepId) {
-    if (!isStepUnlocked(step, hasSource, hasArchive)) {
+    if (busy || !isStepUnlocked(step, hasSource, hasArchive)) {
       return
     }
 
@@ -130,17 +117,11 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
   return (
     <div className="min-h-screen bg-[#050816] text-slate-50">
       <div className="absolute inset-0">
-        <Grainient className="opacity-95" />
+        {busy ? null : <Grainient className="opacity-95" />}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_12%,rgba(255,255,255,0.2),transparent_28%),linear-gradient(180deg,rgba(5,8,22,0.08),rgba(5,8,22,0.62)_54%,#050816_100%)]" />
       </div>
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-[1180px] flex-col px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
-        {toastMessage ? (
-          <div className="fixed right-4 top-4 z-50 max-w-sm rounded-2xl border border-red-500/20 bg-[#2a1118]/92 px-4 py-3 text-sm text-red-100 shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur xl:right-6 xl:top-6">
-            {toastMessage}
-          </div>
-        ) : null}
-
         <header className="mb-4 flex items-center justify-end gap-3 border-b border-white/8 pb-3 sm:mb-5 sm:pb-4">
           <div className="flex items-center gap-3">
             <button
@@ -157,11 +138,20 @@ export function ToolWorkspace({ onBack }: ToolWorkspaceProps) {
           <div className="px-1 pb-0 pt-0 sm:px-2">
             <StepTopRail
               currentStep={currentStep}
+              busy={busy}
               goToStep={goToStep}
               hasArchive={hasArchive}
               hasSource={hasSource}
             />
           </div>
+
+          {motionSplit.errorMessage ? (
+            <ErrorBanner
+              canRetry={motionSplit.phase === 'error' && motionSplit.canExtract}
+              message={motionSplit.errorMessage}
+              onRetry={() => void motionSplit.startExtraction()}
+            />
+          ) : null}
 
           <div className="flex-1">
             <section className="min-w-0">
@@ -199,7 +189,7 @@ function ActiveStepCard({
         />
         <div className="mt-4 rounded-[28px] border border-white/8 bg-black/10 p-4 sm:p-5">
           <UploadZone
-            busy={motionSplit.phase === 'extracting'}
+            busy={motionSplit.isBusy}
             fileName={motionSplit.videoFile?.name ?? null}
             onSelectFile={motionSplit.handleFileSelection}
           />
@@ -221,7 +211,7 @@ function ActiveStepCard({
         <div className="mt-4">
           <ExtractionControls
             canExtract={motionSplit.canExtract}
-            disabled={motionSplit.phase === 'extracting'}
+            disabled={motionSplit.isBusy}
             onCopyPattern={motionSplit.copyNamingPattern}
             onReset={motionSplit.resetAll}
             onStart={() => void motionSplit.startExtraction()}
@@ -275,6 +265,7 @@ function ActiveStepCard({
         <div className="mt-4 border-t border-white/8 pt-4">
           <button
             className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-black/15 px-5 text-sm font-medium text-slate-200 transition hover:border-white/20 hover:bg-white/5"
+            disabled={motionSplit.isBusy}
             onClick={handleRetreat}
             type="button"
           >
@@ -329,6 +320,34 @@ function StepHeading({
   )
 }
 
+function ErrorBanner({
+  canRetry,
+  message,
+  onRetry,
+}: {
+  canRetry: boolean
+  message: string
+  onRetry: () => void
+}) {
+  return (
+    <div
+      className="mx-1 mb-3 flex flex-col gap-3 rounded-2xl border border-red-500/25 bg-[#2a1118]/85 px-4 py-3 text-sm text-red-100 sm:mx-2 sm:flex-row sm:items-center sm:justify-between"
+      role="alert"
+    >
+      <span>{message}</span>
+      {canRetry ? (
+        <button
+          className="shrink-0 rounded-xl border border-red-300/20 px-4 py-2 font-medium transition hover:bg-white/8"
+          onClick={onRetry}
+          type="button"
+        >
+          Retry
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
 function StepFooter({
   actionLabel,
   disabled,
@@ -373,11 +392,13 @@ function StepFooter({
 }
 
 function StepTopRail({
+  busy,
   currentStep,
   goToStep,
   hasArchive,
   hasSource,
 }: {
+  busy: boolean
   currentStep: StepId
   goToStep: (step: StepId) => void
   hasArchive: boolean
@@ -389,7 +410,8 @@ function StepTopRail({
         {([1, 2, 3, 4] as StepId[]).map((step, index, steps) => {
           const active = currentStep === step
           const complete = step < currentStep && isStepUnlocked(step, hasSource, hasArchive)
-          const locked = !isStepUnlocked(step, hasSource, hasArchive)
+          const locked =
+            !isStepUnlocked(step, hasSource, hasArchive) || (busy && !active)
 
           return (
             <div className="min-w-0" key={step}>
